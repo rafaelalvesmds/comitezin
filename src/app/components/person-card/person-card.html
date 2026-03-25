@@ -1,16 +1,16 @@
-<div
-  class="group bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:border-slate-200"
+﻿<div
+  class="group bg-[#12121a] rounded-2xl border border-white/5 p-6 shadow-sm hover:shadow-lg hover:shadow-black/30 transition-all duration-300 hover:border-white/10"
 >
   <!-- Header: Name + Cargo -->
   <div class="flex items-start justify-between mb-5">
     <div class="flex items-center gap-3">
       <div
-        class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-sm"
+        class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm"
       >
         {{ person().name.charAt(0).toUpperCase() }}
       </div>
       <div>
-        <h3 class="font-semibold text-slate-800 text-base leading-tight">{{ person().name }}</h3>
+        <h3 class="font-semibold text-white text-base leading-tight">{{ person().name }}</h3>
         <span
           class="inline-block mt-1 text-xs font-medium px-2.5 py-0.5 rounded-full"
           [class]="cargoClass()"
@@ -21,7 +21,7 @@
     </div>
     <button
       (click)="removeRequested.emit()"
-      class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-200 cursor-pointer"
+      class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 cursor-pointer"
       title="Remover pessoa"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@
   <div class="space-y-3">
     <!-- Expectativa -->
     <label
-      class="flex items-center gap-3 cursor-pointer select-none group/toggle rounded-xl px-3 py-2.5 -mx-3 hover:bg-slate-50 transition-colors"
+      class="flex items-center gap-3 cursor-pointer select-none group/toggle rounded-xl px-3 py-2.5 -mx-3 hover:bg-white/5 transition-colors"
     >
       <div class="relative">
         <input
@@ -49,19 +49,19 @@
           class="sr-only peer"
         />
         <div
-          class="w-9 h-5 bg-slate-200 rounded-full peer-checked:bg-indigo-500 transition-colors duration-200"
+          class="w-9 h-5 bg-slate-700 rounded-full peer-checked:bg-indigo-500 transition-colors duration-200"
         ></div>
         <div
-          class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-4 transition-transform duration-200"
+          class="absolute top-0.5 left-0.5 w-4 h-4 bg-slate-300 rounded-full shadow-sm peer-checked:translate-x-4 peer-checked:bg-white transition-all duration-200"
         ></div>
       </div>
-      <span class="text-sm text-slate-600">Espera ir para o comitê</span>
+      <span class="text-sm text-slate-400">Espera ir para o comite</span>
     </label>
 
-    <!-- Promovido (só no mês do comitê) -->
+    <!-- Promovido (so no mes do comite) -->
     @if (isCommitteeMonth()) {
       <label
-        class="flex items-center gap-3 cursor-pointer select-none rounded-xl px-3 py-2.5 -mx-3 hover:bg-emerald-50 transition-colors"
+        class="flex items-center gap-3 cursor-pointer select-none rounded-xl px-3 py-2.5 -mx-3 hover:bg-emerald-500/5 transition-colors"
       >
         <div class="relative">
           <input
@@ -71,15 +71,15 @@
             class="sr-only peer"
           />
           <div
-            class="w-9 h-5 bg-slate-200 rounded-full peer-checked:bg-emerald-500 transition-colors duration-200"
+            class="w-9 h-5 bg-slate-700 rounded-full peer-checked:bg-emerald-500 transition-colors duration-200"
           ></div>
           <div
-            class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-4 transition-transform duration-200"
+            class="absolute top-0.5 left-0.5 w-4 h-4 bg-slate-300 rounded-full shadow-sm peer-checked:translate-x-4 peer-checked:bg-white transition-all duration-200"
           ></div>
         </div>
-        <span class="text-sm text-slate-600">Foi promovido(a)!</span>
+        <span class="text-sm text-slate-400">Foi promovido(a)!</span>
         @if (person().promoted) {
-          <span class="text-xs text-emerald-600 font-medium ml-auto">✓ Promoção aplicada</span>
+          <span class="text-xs text-emerald-400 font-medium ml-auto">Promocao aplicada</span>
         }
       </label>
     }

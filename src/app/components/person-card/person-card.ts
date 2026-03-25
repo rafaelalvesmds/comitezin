@@ -2,13 +2,13 @@ import { Component, computed, input, output } from '@angular/core';
 import { Cargo, Person } from '../../models/person.model';
 
 const CARGO_COLORS: Record<Cargo, string> = {
-  [Cargo.JUNIOR_I]: 'bg-sky-50 text-sky-700',
-  [Cargo.JUNIOR_II]: 'bg-sky-100 text-sky-800',
-  [Cargo.PLENO_I]: 'bg-violet-50 text-violet-700',
-  [Cargo.PLENO_II]: 'bg-violet-100 text-violet-800',
-  [Cargo.PLENO_III]: 'bg-violet-200 text-violet-900',
-  [Cargo.SENIOR_I]: 'bg-amber-50 text-amber-700',
-  [Cargo.SENIOR_II]: 'bg-amber-100 text-amber-800',
+  [Cargo.JUNIOR_I]: 'bg-sky-950 text-sky-400',
+  [Cargo.JUNIOR_II]: 'bg-sky-900 text-sky-300',
+  [Cargo.PLENO_I]: 'bg-violet-950 text-violet-400',
+  [Cargo.PLENO_II]: 'bg-violet-900 text-violet-300',
+  [Cargo.PLENO_III]: 'bg-violet-800 text-violet-200',
+  [Cargo.SENIOR_I]: 'bg-amber-950 text-amber-400',
+  [Cargo.SENIOR_II]: 'bg-amber-900 text-amber-300',
 };
 
 @Component({
