@@ -27,11 +27,11 @@
   </header>
 
   <main class="max-w-6xl mx-auto px-6 py-8">
-    <!-- Committee Banner -->
+    <!-- Committee Banner with Countdown -->
     <div
       class="rounded-2xl p-6 mb-8 bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-lg shadow-indigo-500/20"
     >
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
           <p class="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">
             Proximo Comite
@@ -47,6 +47,7 @@
               Mes do comite - votacao habilitada
             </span>
           }
+          <app-countdown class="mt-3" />
         </div>
         <div class="flex gap-4 text-center">
           <div class="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3">
@@ -64,6 +65,32 @@
         </div>
       </div>
     </div>
+
+    <!-- Analytics Toggle + Export -->
+    <div class="mb-6 flex items-center gap-3">
+      <button (click)="showCharts.set(!showCharts())"
+        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors cursor-pointer"
+        [class]="showCharts() ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-400 hover:text-white hover:bg-white/5 border border-white/5'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        {{ showCharts() ? 'Ocultar Analytics' : 'Ver Analytics' }}
+      </button>
+
+      <button (click)="exportPdf()"
+        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 border border-white/5 rounded-xl transition-colors cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Exportar PDF
+      </button>
+    </div>
+
+    @if (showCharts()) {
+      <div class="mb-8">
+        <app-charts />
+      </div>
+    }
 
     <!-- Actions -->
     <div class="flex items-center justify-between mb-6">
@@ -89,34 +116,50 @@
       <div
         class="bg-[#12121a] rounded-2xl border border-white/5 shadow-lg shadow-black/30 p-6 mb-6"
       >
-        <form (ngSubmit)="addPerson()" class="flex flex-col sm:flex-row gap-4">
-          <div class="flex-1">
-            <label for="name" class="block text-sm font-medium text-slate-400 mb-1.5">Nome</label>
-            <input
-              id="name"
-              type="text"
-              [ngModel]="newName()"
-              (ngModelChange)="newName.set($event)"
-              name="name"
-              placeholder="Nome completo"
-              class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-            />
-          </div>
-          <div class="sm:w-48">
-            <label for="cargo" class="block text-sm font-medium text-slate-400 mb-1.5">
-              Cargo
-            </label>
-            <select
-              id="cargo"
-              [ngModel]="newCargo()"
-              (ngModelChange)="newCargo.set($event)"
-              name="cargo"
-              class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-            >
-              @for (c of cargos; track c) {
-                <option [value]="c" class="bg-[#12121a]">{{ c }}</option>
-              }
-            </select>
+        <form (ngSubmit)="addPerson()" class="flex flex-col gap-4">
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1">
+              <label for="name" class="block text-sm font-medium text-slate-400 mb-1.5">Nome</label>
+              <input
+                id="name"
+                type="text"
+                [ngModel]="newName()"
+                (ngModelChange)="newName.set($event)"
+                name="name"
+                placeholder="Nome completo"
+                class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              />
+            </div>
+            <div class="sm:w-40">
+              <label for="cargo" class="block text-sm font-medium text-slate-400 mb-1.5">
+                Cargo
+              </label>
+              <select
+                id="cargo"
+                [ngModel]="newCargo()"
+                (ngModelChange)="newCargo.set($event)"
+                name="cargo"
+                class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              >
+                @for (c of cargos; track c) {
+                  <option [value]="c" class="bg-[#12121a]">{{ c }}</option>
+                }
+              </select>
+            </div>
+            <div class="sm:w-40">
+              <label for="squad" class="block text-sm font-medium text-slate-400 mb-1.5">
+                Squad
+              </label>
+              <input
+                id="squad"
+                type="text"
+                [ngModel]="newSquad()"
+                (ngModelChange)="newSquad.set($event)"
+                name="squad"
+                placeholder="Ex: Time Alpha"
+                class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              />
+            </div>
           </div>
           <div class="flex items-end gap-2">
             <button
@@ -137,6 +180,78 @@
       </div>
     }
 
+    <!-- Search & Filters -->
+    <div class="bg-[#12121a] rounded-2xl border border-white/5 p-4 mb-6">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <!-- Search -->
+        <div class="flex-1 relative">
+          <svg class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            name="search"
+            placeholder="Buscar por nome..."
+            class="w-full pl-10 pr-4 py-2 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+          />
+        </div>
+
+        <!-- Filter by Cargo -->
+        <select
+          [ngModel]="filterCargo()"
+          (ngModelChange)="filterCargo.set($event)"
+          name="filterCargo"
+          class="px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:w-36"
+        >
+          <option value="" class="bg-[#12121a]">Todos cargos</option>
+          @for (c of cargos; track c) {
+            <option [value]="c" class="bg-[#12121a]">{{ c }}</option>
+          }
+        </select>
+
+        <!-- Filter by Squad -->
+        <select
+          [ngModel]="filterSquad()"
+          (ngModelChange)="filterSquad.set($event)"
+          name="filterSquad"
+          class="px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:w-36"
+        >
+          <option value="" class="bg-[#12121a]">Todos squads</option>
+          @for (s of squads(); track s) {
+            <option [value]="s" class="bg-[#12121a]">{{ s }}</option>
+          }
+        </select>
+
+        <!-- Filter by Status -->
+        <select
+          [ngModel]="filterStatus()"
+          (ngModelChange)="filterStatus.set($event)"
+          name="filterStatus"
+          class="px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:w-40"
+        >
+          <option value="" class="bg-[#12121a]">Todos status</option>
+          <option value="expecting" class="bg-[#12121a]">Esperam promoção</option>
+          <option value="promoted" class="bg-[#12121a]">Promovidos</option>
+          <option value="none" class="bg-[#12121a]">Sem expectativa</option>
+        </select>
+
+        @if (hasActiveFilters()) {
+          <button (click)="clearFilters()"
+            class="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-white hover:bg-white/5 border border-white/10 transition-colors cursor-pointer whitespace-nowrap">
+            Limpar filtros
+          </button>
+        }
+      </div>
+
+      @if (hasActiveFilters()) {
+        <p class="text-xs text-slate-500 mt-2">
+          {{ filteredPeople().length }} de {{ people().length }} pessoas
+        </p>
+      }
+    </div>
+
     <!-- Loading -->
     @if (loading()) {
       <div class="text-center py-20">
@@ -149,7 +264,7 @@
 
     <!-- People Grid -->
     @if (!loading()) {
-      @if (people().length === 0) {
+      @if (filteredPeople().length === 0) {
         <div class="text-center py-20">
           <div
             class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4"
@@ -168,14 +283,22 @@
               />
             </svg>
           </div>
-          <p class="text-slate-500 text-sm">Nenhuma pessoa cadastrada ainda.</p>
-          <p class="text-slate-600 text-xs mt-1">
-            Clique em "Adicionar pessoa" para comecar.
-          </p>
+          @if (hasActiveFilters()) {
+            <p class="text-slate-500 text-sm">Nenhuma pessoa encontrada com os filtros atuais.</p>
+            <button (click)="clearFilters()"
+              class="text-indigo-400 text-sm mt-2 hover:text-indigo-300 cursor-pointer">
+              Limpar filtros
+            </button>
+          } @else {
+            <p class="text-slate-500 text-sm">Nenhuma pessoa cadastrada ainda.</p>
+            <p class="text-slate-600 text-xs mt-1">
+              Clique em "Adicionar pessoa" para comecar.
+            </p>
+          }
         </div>
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          @for (person of people(); track person.id) {
+          @for (person of filteredPeople(); track person.id) {
             <app-person-card
               [person]="person"
               [isCommitteeMonth]="committee.isCommitteeMonth"
@@ -187,5 +310,10 @@
         </div>
       }
     }
+
+    <!-- Activity Feed -->
+    <div class="mt-8">
+      <app-activity-feed />
+    </div>
   </main>
 </div>

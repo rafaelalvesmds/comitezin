@@ -1,0 +1,189 @@
+<div class="min-h-screen bg-[#0a0a0f]">
+  <!-- Header -->
+  <header class="bg-[#12121a]/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-10">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button (click)="goBack()" class="p-2 rounded-lg text-slate-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 class="text-lg font-bold text-white tracking-tight">Perfil</h1>
+      </div>
+      <button (click)="logout()" class="text-sm text-slate-500 hover:text-slate-300 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+        Sair
+      </button>
+    </div>
+  </header>
+
+  @if (person(); as p) {
+    <main class="max-w-5xl mx-auto px-6 py-8">
+      <!-- Profile Header Card -->
+      <div class="bg-[#12121a] rounded-2xl border border-white/5 p-8 mb-6">
+        <div class="flex flex-col sm:flex-row items-start gap-6">
+          <!-- Avatar -->
+          <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-3xl shadow-lg shadow-indigo-500/20">
+            {{ getInitial() }}
+          </div>
+
+          <!-- Info -->
+          <div class="flex-1">
+            <h2 class="text-2xl font-bold text-white mb-2">{{ p.name }}</h2>
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+              <span class="inline-block text-sm font-medium px-3 py-1 rounded-full" [class]="cargoClass(p.cargo)">
+                {{ p.cargo }}
+              </span>
+              @if (p.squad) {
+                <span class="text-sm text-slate-400 bg-white/5 px-3 py-1 rounded-full flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {{ p.squad }}
+                </span>
+              }
+              @if (p.expectsPromotion) {
+                <span class="text-xs text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full">Espera promoção</span>
+              }
+              @if (p.promoted) {
+                <span class="text-xs text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">Promovido(a)</span>
+              }
+            </div>
+
+            <!-- Career Progress Bar -->
+            <div class="mb-3">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs text-slate-500">Progressão de Carreira</span>
+                <span class="text-xs text-slate-400 font-medium">{{ cargoLevel() }}/{{ cargos.length }}</span>
+              </div>
+              <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full transition-all duration-500"
+                  [style.width.%]="cargoProgress()"></div>
+              </div>
+            </div>
+
+            <!-- Squad edit -->
+            <div class="flex items-center gap-2">
+              @if (!editingSquad()) {
+                <button (click)="editingSquad.set(true); newSquad.set(p.squad || '')"
+                  class="text-xs text-slate-500 hover:text-indigo-400 transition-colors cursor-pointer">
+                  {{ p.squad ? 'Alterar squad' : '+ Adicionar squad' }}
+                </button>
+              } @else {
+                <input type="text" [ngModel]="newSquad()" (ngModelChange)="newSquad.set($event)" name="squad"
+                  placeholder="Nome do squad"
+                  class="px-3 py-1.5 text-sm rounded-lg border border-white/10 bg-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-40" />
+                <button (click)="saveSquad()" class="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer">Salvar</button>
+                <button (click)="editingSquad.set(false)" class="text-xs text-slate-500 hover:text-slate-300 cursor-pointer">Cancelar</button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Competencies Radar -->
+        <div class="bg-[#12121a] rounded-2xl border border-white/5 p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Competências
+            </h3>
+            @if (!editingCompetencies()) {
+              <button (click)="startEditCompetencies()"
+                class="text-xs text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg hover:bg-indigo-500/10 transition-colors cursor-pointer">
+                Editar
+              </button>
+            }
+          </div>
+
+          @if (!editingCompetencies()) {
+            <app-radar-chart [competencies]="competencies()" />
+          } @else {
+            <div class="space-y-4">
+              @for (item of [
+                { label: 'Técnico', signal: formTecnico, setter: formTecnico },
+                { label: 'Comunicação', signal: formComunicacao, setter: formComunicacao },
+                { label: 'Liderança', signal: formLideranca, setter: formLideranca },
+                { label: 'Autonomia', signal: formAutonomia, setter: formAutonomia },
+                { label: 'Impacto', signal: formImpacto, setter: formImpacto }
+              ]; track item.label) {
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-sm text-slate-400">{{ item.label }}</label>
+                    <span class="text-sm font-medium text-indigo-400">{{ item.signal() }}</span>
+                  </div>
+                  <input type="range" min="1" max="5" step="1"
+                    [ngModel]="item.signal()" (ngModelChange)="item.setter.set($event)"
+                    [name]="item.label"
+                    class="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-indigo-500" />
+                </div>
+              }
+              <div class="flex gap-2 pt-2">
+                <button (click)="saveCompetencies()" [disabled]="savingCompetencies()"
+                  class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-colors cursor-pointer disabled:opacity-50">
+                  {{ savingCompetencies() ? 'Salvando...' : 'Salvar' }}
+                </button>
+                <button (click)="editingCompetencies.set(false)"
+                  class="px-4 py-2 text-sm text-slate-400 hover:bg-white/5 rounded-xl transition-colors cursor-pointer">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Promotion Timeline -->
+        <div class="bg-[#12121a] rounded-2xl border border-white/5 p-6">
+          <h3 class="text-base font-semibold text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            Histórico de Promoções
+          </h3>
+
+          @if (promotionHistory().length === 0) {
+            <div class="text-center py-8">
+              <p class="text-slate-500 text-sm">Nenhuma promoção registrada ainda.</p>
+            </div>
+          } @else {
+            <div class="relative pl-6">
+              <!-- Timeline line -->
+              <div class="absolute left-2 top-0 bottom-0 w-px bg-white/10"></div>
+
+              @for (record of promotionHistory(); track record.id) {
+                <div class="relative mb-6 last:mb-0">
+                  <!-- Dot -->
+                  <div class="absolute -left-4 top-1.5 w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-[#12121a]"></div>
+
+                  <div class="bg-white/5 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-sm font-medium px-2.5 py-0.5 rounded-full" [class]="cargoClass(record.fromCargo)">
+                        {{ record.fromCargo }}
+                      </span>
+                      <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                      <span class="text-sm font-medium px-2.5 py-0.5 rounded-full" [class]="cargoClass(record.toCargo)">
+                        {{ record.toCargo }}
+                      </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-1">{{ formatDate(record.promotedAt) }} · {{ record.committeeMonth }}</p>
+                    @if (record.notes) {
+                      <p class="text-sm text-slate-400 italic mt-1">"{{ record.notes }}"</p>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </main>
+  } @else {
+    <div class="flex items-center justify-center min-h-[50vh]">
+      <div class="w-8 h-8 border-4 border-indigo-900 border-t-indigo-500 rounded-full animate-spin"></div>
+    </div>
+  }
+</div>

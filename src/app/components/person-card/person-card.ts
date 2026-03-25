@@ -1,4 +1,6 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { Cargo, Person } from '../../models/person.model';
 
 const CARGO_COLORS: Record<Cargo, string> = {
@@ -13,6 +15,7 @@ const CARGO_COLORS: Record<Cargo, string> = {
 
 @Component({
   selector: 'app-person-card',
+  imports: [FormsModule],
   templateUrl: './person-card.html',
   styleUrl: './person-card.css',
 })
@@ -21,8 +24,39 @@ export class PersonCard {
   isCommitteeMonth = input(false);
 
   expectationChanged = output<boolean>();
-  promotedChanged = output<boolean>();
+  promotedChanged = output<{ promoted: boolean; notes: string }>();
   removeRequested = output<void>();
 
+  showNotesInput = signal(false);
+  promotionNotes = signal('');
+
   protected cargoClass = computed(() => CARGO_COLORS[this.person().cargo] ?? 'bg-slate-100 text-slate-700');
+
+  constructor(private router: Router) {}
+
+  openProfile() {
+    this.router.navigate(['/profile', this.person().id]);
+  }
+
+  onPromoteToggle() {
+    const p = this.person();
+    if (!p.promoted) {
+      // About to promote — show notes input
+      this.showNotesInput.set(true);
+    } else {
+      // Un-promote
+      this.promotedChanged.emit({ promoted: false, notes: '' });
+    }
+  }
+
+  confirmPromotion() {
+    this.promotedChanged.emit({ promoted: true, notes: this.promotionNotes() });
+    this.showNotesInput.set(false);
+    this.promotionNotes.set('');
+  }
+
+  cancelPromotion() {
+    this.showNotesInput.set(false);
+    this.promotionNotes.set('');
+  }
 }

@@ -24,6 +24,38 @@ export interface Person {
   cargo: Cargo;
   expectsPromotion: boolean;
   promoted: boolean;
+  squad: string;
+  createdAt: string;
+}
+
+export interface PromotionRecord {
+  id: string;
+  personId: string;
+  personName?: string;
+  fromCargo: string;
+  toCargo: string;
+  promotedAt: string;
+  committeeMonth: string;
+  notes: string;
+}
+
+export interface ActivityRecord {
+  id: string;
+  personId: string | null;
+  personName: string;
+  action: string;
+  details: string;
+  createdAt: string;
+}
+
+export interface Competencies {
+  personId: string;
+  tecnico: number;
+  comunicacao: number;
+  lideranca: number;
+  autonomia: number;
+  impacto: number;
+  updatedAt?: string;
 }
 
 export function getNextCargo(current: Cargo): Cargo | null {
