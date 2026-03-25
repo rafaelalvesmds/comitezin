@@ -11,10 +11,14 @@ const CARGO_COLORS: Record<Cargo, string> = {
   [Cargo.PLENO_III]: 'bg-violet-800 text-violet-200',
   [Cargo.SENIOR_I]: 'bg-amber-950 text-amber-400',
   [Cargo.SENIOR_II]: 'bg-amber-900 text-amber-300',
-  [Cargo.ENG_SOFTWARE_SENIOR_I]: 'bg-amber-950 text-amber-400',
-  [Cargo.ENG_SOFTWARE_SENIOR_II]: 'bg-amber-900 text-amber-300',
-  [Cargo.GAMEDEV_PLENO]: 'bg-emerald-950 text-emerald-400',
-  [Cargo.ARQUITETO_JUNIOR]: 'bg-teal-950 text-teal-400',
+  [Cargo.SENIOR_III]: 'bg-amber-800 text-amber-200',
+  [Cargo.ESPECIALISTA_I]: 'bg-emerald-950 text-emerald-400',
+  [Cargo.ESPECIALISTA_II]: 'bg-emerald-900 text-emerald-300',
+  [Cargo.ESPECIALISTA_III]: 'bg-emerald-800 text-emerald-200',
+  [Cargo.ESPECIALISTA_IIII]: 'bg-emerald-700 text-emerald-100',
+  [Cargo.ESPECIALISTA_IIIII]: 'bg-emerald-600 text-emerald-50',
+  [Cargo.ARQUITETO_JUNIOR]: 'bg-indigo-950 text-indigo-400',
+  [Cargo.ARQUITETO_MIL]: 'bg-fuchsia-950 text-fuchsia-400 shadow-lg border border-fuchsia-500/30',
 };
 
 @Component({
