@@ -1,0 +1,87 @@
+<div
+  class="group bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:border-slate-200"
+>
+  <!-- Header: Name + Cargo -->
+  <div class="flex items-start justify-between mb-5">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-sm"
+      >
+        {{ person().name.charAt(0).toUpperCase() }}
+      </div>
+      <div>
+        <h3 class="font-semibold text-slate-800 text-base leading-tight">{{ person().name }}</h3>
+        <span
+          class="inline-block mt-1 text-xs font-medium px-2.5 py-0.5 rounded-full"
+          [class]="cargoClass()"
+        >
+          {{ person().cargo }}
+        </span>
+      </div>
+    </div>
+    <button
+      (click)="removeRequested.emit()"
+      class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all duration-200 cursor-pointer"
+      title="Remover pessoa"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Toggles -->
+  <div class="space-y-3">
+    <!-- Expectativa -->
+    <label
+      class="flex items-center gap-3 cursor-pointer select-none group/toggle rounded-xl px-3 py-2.5 -mx-3 hover:bg-slate-50 transition-colors"
+    >
+      <div class="relative">
+        <input
+          type="checkbox"
+          [checked]="person().expectsPromotion"
+          (change)="expectationChanged.emit(!person().expectsPromotion)"
+          class="sr-only peer"
+        />
+        <div
+          class="w-9 h-5 bg-slate-200 rounded-full peer-checked:bg-indigo-500 transition-colors duration-200"
+        ></div>
+        <div
+          class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-4 transition-transform duration-200"
+        ></div>
+      </div>
+      <span class="text-sm text-slate-600">Espera ir para o comitê</span>
+    </label>
+
+    <!-- Promovido (só no mês do comitê) -->
+    @if (isCommitteeMonth()) {
+      <label
+        class="flex items-center gap-3 cursor-pointer select-none rounded-xl px-3 py-2.5 -mx-3 hover:bg-emerald-50 transition-colors"
+      >
+        <div class="relative">
+          <input
+            type="checkbox"
+            [checked]="person().promoted"
+            (change)="promotedChanged.emit(!person().promoted)"
+            class="sr-only peer"
+          />
+          <div
+            class="w-9 h-5 bg-slate-200 rounded-full peer-checked:bg-emerald-500 transition-colors duration-200"
+          ></div>
+          <div
+            class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-4 transition-transform duration-200"
+          ></div>
+        </div>
+        <span class="text-sm text-slate-600">Foi promovido(a)!</span>
+        @if (person().promoted) {
+          <span class="text-xs text-emerald-600 font-medium ml-auto">✓ Promoção aplicada</span>
+        }
+      </label>
+    }
+  </div>
+</div>
