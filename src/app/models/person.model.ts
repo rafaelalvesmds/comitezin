@@ -6,16 +6,24 @@ export enum Cargo {
   PLENO_III = 'Pleno III',
   SENIOR_I = 'Senior I',
   SENIOR_II = 'Senior II',
+  ENG_SOFTWARE_SENIOR_I = 'Engenheiro de Software Sênior I',
+  ENG_SOFTWARE_SENIOR_II = 'Engenheiro de Software Sênior II',
+  GAMEDEV_PLENO = 'GameDev Pleno',
+  ARQUITETO_JUNIOR = 'Arquiteto Junior',
 }
 
 export const CARGO_HIERARCHY: Cargo[] = [
   Cargo.JUNIOR_I,
   Cargo.JUNIOR_II,
+  Cargo.ARQUITETO_JUNIOR,
   Cargo.PLENO_I,
   Cargo.PLENO_II,
   Cargo.PLENO_III,
+  Cargo.GAMEDEV_PLENO,
   Cargo.SENIOR_I,
   Cargo.SENIOR_II,
+  Cargo.ENG_SOFTWARE_SENIOR_I,
+  Cargo.ENG_SOFTWARE_SENIOR_II,
 ];
 
 export interface Person {
