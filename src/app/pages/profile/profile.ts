@@ -5,16 +5,17 @@ import { DataService } from '../../services/data.service';
 import { CommitteeService } from '../../services/committee.service';
 import { AuthService } from '../../services/auth.service';
 import { RadarChart } from '../../components/radar-chart/radar-chart';
-import { Person, Competencies, PromotionRecord, Cargo, CARGO_HIERARCHY } from '../../models/person.model';
+import { Person, Competencies, PromotionRecord, Cargo, Step, STEP_HIERARCHY } from '../../models/person.model';
 
-const CARGO_COLORS: Record<string, string> = {
-  'Junior I': 'bg-sky-950 text-sky-400',
-  'Junior II': 'bg-sky-900 text-sky-300',
-  'Pleno I': 'bg-violet-950 text-violet-400',
-  'Pleno II': 'bg-violet-900 text-violet-300',
-  'Pleno III': 'bg-violet-800 text-violet-200',
-  'Senior I': 'bg-amber-950 text-amber-400',
-  'Senior II': 'bg-amber-900 text-amber-300',
+const STEP_COLORS: Record<string, string> = {
+  [Step.ESTAGIARIO]: 'bg-slate-900 text-slate-400',
+  [Step.JUNIOR_I]: 'bg-sky-950 text-sky-400',
+  [Step.JUNIOR_II]: 'bg-sky-900 text-sky-300',
+  [Step.PLENO_I]: 'bg-violet-950 text-violet-400',
+  [Step.PLENO_II]: 'bg-violet-900 text-violet-300',
+  [Step.PLENO_III]: 'bg-violet-800 text-violet-200',
+  [Step.SENIOR_I]: 'bg-amber-950 text-amber-400',
+  [Step.SENIOR_II]: 'bg-amber-900 text-amber-300',
 };
 
 @Component({
@@ -45,7 +46,8 @@ export class Profile implements OnInit {
   formAutonomia = signal(1);
   formImpacto = signal(1);
 
-  readonly cargos = CARGO_HIERARCHY;
+  readonly steps = STEP_HIERARCHY;
+  readonly cargos = Object.values(Cargo);
   readonly committee = this.committeeService.getNextCommittee();
 
   async ngOnInit() {
@@ -80,8 +82,8 @@ export class Profile implements OnInit {
     this.formImpacto.set(comp.impacto);
   }
 
-  cargoClass(cargo: string): string {
-    return CARGO_COLORS[cargo] ?? 'bg-slate-100 text-slate-700';
+  stepClass(step: string): string {
+    return STEP_COLORS[step] ?? 'bg-slate-100 text-slate-700';
   }
 
   getInitial(): string {
@@ -92,15 +94,15 @@ export class Profile implements OnInit {
     return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  cargoLevel(): number {
+  stepLevel(): number {
     const p = this.person();
     if (!p) return 0;
-    const idx = CARGO_HIERARCHY.indexOf(p.cargo);
+    const idx = STEP_HIERARCHY.indexOf(p.step);
     return idx >= 0 ? idx + 1 : 0;
   }
 
-  cargoProgress(): number {
-    return (this.cargoLevel() / CARGO_HIERARCHY.length) * 100;
+  stepProgress(): number {
+    return (this.stepLevel() / STEP_HIERARCHY.length) * 100;
   }
 
   async startEditCompetencies() {

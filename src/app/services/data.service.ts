@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Person, Cargo, getNextCargo, PromotionRecord, ActivityRecord, Competencies } from '../models/person.model';
+import { Person, Cargo, Step, getNextStep, PromotionRecord, ActivityRecord, Competencies } from '../models/person.model';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
@@ -30,8 +30,8 @@ export class DataService {
     }
   }
 
-  async addPerson(name: string, cargo: Cargo, squad: string = ''): Promise<void> {
-    await this.http.post(this.apiUrl, { name, cargo, squad }).toPromise();
+  async addPerson(name: string, cargo: Cargo, step: Step, squad: string = ''): Promise<void> {
+    await this.http.post(this.apiUrl, { name, cargo, step, squad }).toPromise();
     await this.loadPeople();
     await this.loadActivities();
     await this.loadSquads();
@@ -43,15 +43,15 @@ export class DataService {
     await this.loadActivities();
   }
 
-  async markPromoted(id: string, promoted: boolean, currentCargo: Cargo, committeeMonth: string, notes: string = ''): Promise<void> {
+  async markPromoted(id: string, promoted: boolean, currentStep: Step, cargo: Cargo, committeeMonth: string, notes: string = ''): Promise<void> {
     if (promoted) {
-      const nextCargo = getNextCargo(currentCargo);
-      if (nextCargo) {
-        await this.http.patch(this.apiUrl + '/' + id, { promoted: true, cargo: nextCargo }).toPromise();
+      const nextStep = getNextStep(currentStep, cargo);
+      if (nextStep) {
+        await this.http.patch(this.apiUrl + '/' + id, { promoted: true, step: nextStep }).toPromise();
         await this.http.post('/api/promotions', {
           personId: id,
-          fromCargo: currentCargo,
-          toCargo: nextCargo,
+          fromStep: currentStep,
+          toStep: nextStep,
           committeeMonth,
           notes,
         }).toPromise();

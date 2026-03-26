@@ -30,8 +30,11 @@
           <div class="flex-1">
             <h2 class="text-2xl font-bold text-white mb-2">{{ p.name }}</h2>
             <div class="flex flex-wrap items-center gap-3 mb-4">
-              <span class="inline-block text-sm font-medium px-3 py-1 rounded-full" [class]="cargoClass(p.cargo)">
+              <span class="text-sm text-indigo-300 font-medium bg-indigo-500/10 px-3 py-1 rounded-full">
                 {{ p.cargo }}
+              </span>
+              <span class="inline-block text-sm font-medium px-3 py-1 rounded-full" [class]="stepClass(p.step)">
+                {{ p.step }}
               </span>
               @if (p.squad) {
                 <span class="text-sm text-slate-400 bg-white/5 px-3 py-1 rounded-full flex items-center gap-1.5">
@@ -52,12 +55,12 @@
             <!-- Career Progress Bar -->
             <div class="mb-3">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs text-slate-500">Progressão de Carreira</span>
-                <span class="text-xs text-slate-400 font-medium">{{ cargoLevel() }}/{{ cargos.length }}</span>
+                <span class="text-xs text-slate-500">Progressão de Carreira (Steps)</span>
+                <span class="text-xs text-slate-400 font-medium">{{ stepLevel() }}/{{ steps.length }}</span>
               </div>
               <div class="h-2 bg-white/5 rounded-full overflow-hidden">
                 <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full transition-all duration-500"
-                  [style.width.%]="cargoProgress()"></div>
+                  [style.width.%]="stepProgress()"></div>
               </div>
             </div>
 
@@ -159,14 +162,14 @@
 
                   <div class="bg-white/5 rounded-xl p-4">
                     <div class="flex items-center gap-2 mb-2">
-                      <span class="text-sm font-medium px-2.5 py-0.5 rounded-full" [class]="cargoClass(record.fromCargo)">
-                        {{ record.fromCargo }}
+                      <span class="text-sm font-medium px-2.5 py-0.5 rounded-full" [class]="stepClass(record.fromStep)">
+                        {{ record.fromStep }}
                       </span>
                       <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
-                      <span class="text-sm font-medium px-2.5 py-0.5 rounded-full" [class]="cargoClass(record.toCargo)">
-                        {{ record.toCargo }}
+                      <span class="text-sm font-medium px-2.5 py-0.5 rounded-full" [class]="stepClass(record.toStep)">
+                        {{ record.toStep }}
                       </span>
                     </div>
                     <p class="text-xs text-slate-500 mb-1">{{ formatDate(record.promotedAt) }} · {{ record.committeeMonth }}</p>

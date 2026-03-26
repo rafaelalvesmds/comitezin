@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, OnDestroy, ElementRef, viewChild, effect } from '@angular/core';
 import { Chart, registerables } from 'chart.js';
 import { DataService } from '../../services/data.service';
-import { CARGO_HIERARCHY } from '../../models/person.model';
+import { STEP_HIERARCHY } from '../../models/person.model';
 
 Chart.register(...registerables);
 
@@ -19,14 +19,14 @@ export class Charts implements OnDestroy {
   doughnutCanvas = viewChild<ElementRef<HTMLCanvasElement>>('doughnutCanvas');
   barCanvas = viewChild<ElementRef<HTMLCanvasElement>>('barCanvas');
 
-  readonly cargoDistribution = computed(() => {
+  readonly stepDistribution = computed(() => {
     const people = this.dataService.people();
     const dist: Record<string, number> = {};
-    for (const cargo of CARGO_HIERARCHY) {
-      dist[cargo] = 0;
+    for (const step of STEP_HIERARCHY) {
+      dist[step] = 0;
     }
     for (const p of people) {
-      if (dist[p.cargo] !== undefined) dist[p.cargo]++;
+      if (dist[p.step] !== undefined) dist[p.step]++;
     }
     return dist;
   });
@@ -43,7 +43,7 @@ export class Charts implements OnDestroy {
 
   constructor() {
     effect(() => {
-      const dist = this.cargoDistribution();
+      const dist = this.stepDistribution();
       const stats = this.expectationVsPromoted();
       const doughnutEl = this.doughnutCanvas();
       const barEl = this.barCanvas();

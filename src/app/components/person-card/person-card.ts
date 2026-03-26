@@ -1,24 +1,25 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Cargo, Person } from '../../models/person.model';
+import { Step, Cargo, Person, getNextStep } from '../../models/person.model';
 
-const CARGO_COLORS: Record<Cargo, string> = {
-  [Cargo.JUNIOR_I]: 'bg-sky-950 text-sky-400',
-  [Cargo.JUNIOR_II]: 'bg-sky-900 text-sky-300',
-  [Cargo.PLENO_I]: 'bg-violet-950 text-violet-400',
-  [Cargo.PLENO_II]: 'bg-violet-900 text-violet-300',
-  [Cargo.PLENO_III]: 'bg-violet-800 text-violet-200',
-  [Cargo.SENIOR_I]: 'bg-amber-950 text-amber-400',
-  [Cargo.SENIOR_II]: 'bg-amber-900 text-amber-300',
-  [Cargo.SENIOR_III]: 'bg-amber-800 text-amber-200',
-  [Cargo.ESPECIALISTA_I]: 'bg-emerald-950 text-emerald-400',
-  [Cargo.ESPECIALISTA_II]: 'bg-emerald-900 text-emerald-300',
-  [Cargo.ESPECIALISTA_III]: 'bg-emerald-800 text-emerald-200',
-  [Cargo.ESPECIALISTA_IIII]: 'bg-emerald-700 text-emerald-100',
-  [Cargo.ESPECIALISTA_IIIII]: 'bg-emerald-600 text-emerald-50',
-  [Cargo.ARQUITETO_JUNIOR]: 'bg-indigo-950 text-indigo-400',
-  [Cargo.ARQUITETO_MIL]: 'bg-fuchsia-950 text-fuchsia-400 shadow-lg border border-fuchsia-500/30',
+const STEP_COLORS: Record<Step, string> = {
+  [Step.ESTAGIARIO]: 'bg-slate-900 text-slate-400',
+  [Step.JUNIOR_I]: 'bg-sky-950 text-sky-400',
+  [Step.JUNIOR_II]: 'bg-sky-900 text-sky-300',
+  [Step.PLENO_I]: 'bg-violet-950 text-violet-400',
+  [Step.PLENO_II]: 'bg-violet-900 text-violet-300',
+  [Step.PLENO_III]: 'bg-violet-800 text-violet-200',
+  [Step.SENIOR_I]: 'bg-amber-950 text-amber-400',
+  [Step.SENIOR_II]: 'bg-amber-900 text-amber-300',
+  [Step.SENIOR_III]: 'bg-amber-800 text-amber-200',
+  [Step.ESPECIALISTA_I]: 'bg-emerald-950 text-emerald-400',
+  [Step.ESPECIALISTA_II]: 'bg-emerald-900 text-emerald-300',
+  [Step.ESPECIALISTA_III]: 'bg-emerald-800 text-emerald-200',
+  [Step.ESPECIALISTA_IIII]: 'bg-emerald-700 text-emerald-100',
+  [Step.ESPECIALISTA_IIIII]: 'bg-emerald-600 text-emerald-50',
+  [Step.ARQUITETO_JUNIOR]: 'bg-indigo-950 text-indigo-400',
+  [Step.ARQUITETO_MIL]: 'bg-fuchsia-950 text-fuchsia-400 shadow-lg border border-fuchsia-500/30',
 };
 
 @Component({
@@ -38,7 +39,12 @@ export class PersonCard {
   showNotesInput = signal(false);
   promotionNotes = signal('');
 
-  protected cargoClass = computed(() => CARGO_COLORS[this.person().cargo] ?? 'bg-slate-100 text-slate-700');
+  protected stepClass = computed(() => STEP_COLORS[this.person().step] ?? 'bg-slate-100 text-slate-700');
+  
+  protected canBePromoted = computed(() => {
+    const p = this.person();
+    return !!getNextStep(p.step, p.cargo);
+  });
 
   constructor(private router: Router) {}
 

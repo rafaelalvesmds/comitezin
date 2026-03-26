@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { DataService } from './data.service';
 import { CommitteeService } from './committee.service';
-import { CARGO_HIERARCHY } from '../models/person.model';
+import { STEP_HIERARCHY } from '../models/person.model';
 
 @Injectable({ providedIn: 'root' })
 export class ExportService {
@@ -43,14 +43,16 @@ export class ExportService {
     doc.text(`Esperam promoção: ${people.filter(p => p.expectsPromotion).length}`, 20, y); y += 6;
     doc.text(`Promovidos: ${people.filter(p => p.promoted).length}`, 20, y); y += 6;
 
-    // Cargo distribution
+    // Step distribution (Career level)
     y += 4;
     doc.setFont('helvetica', 'bold');
-    doc.text('Distribuição por Cargo:', 20, y); y += 7;
+    doc.text('Distribuição por Step (Carreira):', 20, y); y += 7;
     doc.setFont('helvetica', 'normal');
-    for (const cargo of CARGO_HIERARCHY) {
-      const count = people.filter(p => p.cargo === cargo).length;
-      doc.text(`  ${cargo}: ${count} pessoa(s)`, 20, y); y += 6;
+    for (const step of STEP_HIERARCHY) {
+      const count = people.filter(p => p.step === step).length;
+      if (count > 0) {
+        doc.text(`  ${step}: ${count} pessoa(s)`, 20, y); y += 6;
+      }
     }
 
     // Separator
@@ -73,7 +75,7 @@ export class ExportService {
       for (const p of expecting) {
         if (y > 270) { doc.addPage(); y = 20; }
         const squad = p.squad ? ` [${p.squad}]` : '';
-        doc.text(`• ${p.name} — ${p.cargo}${squad}`, 20, y); y += 6;
+        doc.text(`• ${p.name} — ${p.cargo} (${p.step})${squad}`, 20, y); y += 6;
       }
     }
 
@@ -95,7 +97,7 @@ export class ExportService {
       for (const p of promoted) {
         if (y > 270) { doc.addPage(); y = 20; }
         const squad = p.squad ? ` [${p.squad}]` : '';
-        doc.text(`• ${p.name} — ${p.cargo}${squad}`, 20, y); y += 6;
+        doc.text(`• ${p.name} — ${p.cargo} (${p.step})${squad}`, 20, y); y += 6;
       }
     }
 
@@ -109,20 +111,22 @@ export class ExportService {
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('Nome', 20, y);
-    doc.text('Cargo', 90, y);
-    doc.text('Squad', 135, y);
-    doc.text('Status', 170, y);
+    doc.text('Cargo', 75, y);
+    doc.text('Step', 115, y);
+    doc.text('Squad', 150, y);
+    doc.text('Status', 175, y);
     y += 2;
     doc.line(20, y, 190, y); y += 5;
 
     doc.setFont('helvetica', 'normal');
     for (const p of people) {
       if (y > 270) { doc.addPage(); y = 20; }
-      doc.text(p.name.substring(0, 30), 20, y);
-      doc.text(p.cargo, 90, y);
-      doc.text((p.squad || '-').substring(0, 15), 135, y);
+      doc.text(p.name.substring(0, 25), 20, y);
+      doc.text(p.cargo.substring(0, 18), 75, y);
+      doc.text(p.step.substring(0, 15), 115, y);
+      doc.text((p.squad || '-').substring(0, 12), 150, y);
       const status = p.promoted ? 'Promovido' : p.expectsPromotion ? 'Espera' : '-';
-      doc.text(status, 170, y);
+      doc.text(status, 175, y);
       y += 6;
     }
 

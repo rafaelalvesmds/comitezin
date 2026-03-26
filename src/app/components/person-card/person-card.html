@@ -1,4 +1,4 @@
-﻿<div
+<div
   class="group bg-[#12121a] rounded-2xl border border-white/5 p-6 shadow-sm hover:shadow-lg hover:shadow-black/30 transition-all duration-300 hover:border-white/10"
 >
   <!-- Header: Name + Cargo -->
@@ -12,11 +12,12 @@
       <div>
         <h3 class="font-semibold text-white text-base leading-tight hover:text-indigo-400 transition-colors">{{ person().name }}</h3>
         <div class="flex items-center gap-2 mt-1">
+          <span class="text-xs text-indigo-300/80 font-medium">{{ person().cargo }}</span>
           <span
-            class="inline-block text-xs font-medium px-2.5 py-0.5 rounded-full"
-            [class]="cargoClass()"
+            class="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full"
+            [class]="stepClass()"
           >
-            {{ person().cargo }}
+            {{ person().step }}
           </span>
           @if (person().squad) {
             <span class="text-[10px] text-slate-500 bg-white/5 px-2 py-0.5 rounded-full">{{ person().squad }}</span>
@@ -66,28 +67,34 @@
     <!-- Promovido (so no mes do comite) -->
     @if (isCommitteeMonth()) {
       @if (!showNotesInput()) {
-        <label
-          class="flex items-center gap-3 cursor-pointer select-none rounded-xl px-3 py-2.5 -mx-3 hover:bg-emerald-500/5 transition-colors"
-        >
-          <div class="relative">
-            <input
-              type="checkbox"
-              [checked]="person().promoted"
-              (change)="onPromoteToggle()"
-              class="sr-only peer"
-            />
-            <div
-              class="w-9 h-5 bg-slate-700 rounded-full peer-checked:bg-emerald-500 transition-colors duration-200"
-            ></div>
-            <div
-              class="absolute top-0.5 left-0.5 w-4 h-4 bg-slate-300 rounded-full shadow-sm peer-checked:translate-x-4 peer-checked:bg-white transition-all duration-200"
-            ></div>
+        @if (canBePromoted() || person().promoted) {
+          <label
+            class="flex items-center gap-3 cursor-pointer select-none rounded-xl px-3 py-2.5 -mx-3 hover:bg-emerald-500/5 transition-colors"
+          >
+            <div class="relative">
+              <input
+                type="checkbox"
+                [checked]="person().promoted"
+                (change)="onPromoteToggle()"
+                class="sr-only peer"
+              />
+              <div
+                class="w-9 h-5 bg-slate-700 rounded-full peer-checked:bg-emerald-500 transition-colors duration-200"
+              ></div>
+              <div
+                class="absolute top-0.5 left-0.5 w-4 h-4 bg-slate-300 rounded-full shadow-sm peer-checked:translate-x-4 peer-checked:bg-white transition-all duration-200"
+              ></div>
+            </div>
+            <span class="text-sm text-slate-400">Foi promovido(a)!</span>
+            @if (person().promoted) {
+              <span class="text-xs text-emerald-400 font-medium ml-auto">Promoção aplicada</span>
+            }
+          </label>
+        } @else {
+          <div class="px-3 py-2.5 -mx-3 text-xs text-slate-500 italic">
+            Nível máximo atingido para este cargo
           </div>
-          <span class="text-sm text-slate-400">Foi promovido(a)!</span>
-          @if (person().promoted) {
-            <span class="text-xs text-emerald-400 font-medium ml-auto">Promoção aplicada</span>
-          }
-        </label>
+        }
       }
 
       <!-- Promotion Notes Dialog -->

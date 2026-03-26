@@ -1,4 +1,5 @@
-export enum Cargo {
+export enum Step {
+  ESTAGIARIO = 'Estagiário',
   JUNIOR_I = 'Junior I',
   JUNIOR_II = 'Junior II',
   PLENO_I = 'Pleno I',
@@ -16,28 +17,36 @@ export enum Cargo {
   ARQUITETO_MIL = 'Arquiteto Especialista MIL',
 }
 
-export const CARGO_HIERARCHY: Cargo[] = [
-  Cargo.JUNIOR_I,
-  Cargo.JUNIOR_II,
-  Cargo.PLENO_I,
-  Cargo.PLENO_II,
-  Cargo.PLENO_III,
-  Cargo.SENIOR_I,
-  Cargo.SENIOR_II,
-  Cargo.SENIOR_III,
-  Cargo.ESPECIALISTA_I,
-  Cargo.ESPECIALISTA_II,
-  Cargo.ESPECIALISTA_III,
-  Cargo.ESPECIALISTA_IIII,
-  Cargo.ESPECIALISTA_IIIII,
-  Cargo.ARQUITETO_JUNIOR,
-  Cargo.ARQUITETO_MIL,
+export enum Cargo {
+  ANALISTA_SISTEMAS = 'Analista de Sistemas',
+  ANALISTA_NEGOCIO = 'Analista de Negócio',
+  QA = 'QA',
+}
+
+export const STEP_HIERARCHY: Step[] = [
+  Step.ESTAGIARIO,
+  Step.JUNIOR_I,
+  Step.JUNIOR_II,
+  Step.PLENO_I,
+  Step.PLENO_II,
+  Step.PLENO_III,
+  Step.SENIOR_I,
+  Step.SENIOR_II,
+  Step.SENIOR_III,
+  Step.ESPECIALISTA_I,
+  Step.ESPECIALISTA_II,
+  Step.ESPECIALISTA_III,
+  Step.ESPECIALISTA_IIII,
+  Step.ESPECIALISTA_IIIII,
+  Step.ARQUITETO_JUNIOR,
+  Step.ARQUITETO_MIL,
 ];
 
 export interface Person {
   id: string;
   name: string;
   cargo: Cargo;
+  step: Step;
   expectsPromotion: boolean;
   promoted: boolean;
   squad: string;
@@ -48,8 +57,8 @@ export interface PromotionRecord {
   id: string;
   personId: string;
   personName?: string;
-  fromCargo: string;
-  toCargo: string;
+  fromStep: string;
+  toStep: string;
   promotedAt: string;
   committeeMonth: string;
   notes: string;
@@ -74,10 +83,20 @@ export interface Competencies {
   updatedAt?: string;
 }
 
-export function getNextCargo(current: Cargo): Cargo | null {
-  const index = CARGO_HIERARCHY.indexOf(current);
-  if (index === -1 || index === CARGO_HIERARCHY.length - 1) {
+export function getNextStep(current: Step, cargo: Cargo): Step | null {
+  const index = STEP_HIERARCHY.indexOf(current);
+  if (index === -1 || index === STEP_HIERARCHY.length - 1) {
     return null;
   }
-  return CARGO_HIERARCHY[index + 1];
+  
+  const next = STEP_HIERARCHY[index + 1];
+  
+  // If Analista de Negócio or QA, they can't go beyond Senior III
+  if (cargo === Cargo.ANALISTA_NEGOCIO || cargo === Cargo.QA) {
+    if (next.startsWith('Especialista') || next.startsWith('Arquiteto')) {
+      return null;
+    }
+  }
+  
+  return next;
 }
