@@ -37,9 +37,9 @@ export class AuthService {
    * Tries to verify the token with the backend.
    * If successful, saves the session.
    */
-  async login(token: string): Promise<boolean> {
+  async login(token: string): Promise<{ success: boolean; error?: string }> {
     const trimmed = token.trim();
-    if (!trimmed) return false;
+    if (!trimmed) return { success: false, error: 'Por favor, insira o token de acesso.' };
 
     try {
       // We call the verify endpoint with the provided token in the header
@@ -51,12 +51,18 @@ export class AuthService {
       sessionStorage.setItem(STORAGE_KEY, trimmed);
       this.token.set(trimmed);
       this.isAuthenticated.set(true);
-      return true;
-    } catch (err) {
+      return { success: true };
+    } catch (err: any) {
       console.error('Falha na autenticação', err);
       // Clean up if it failed
       this.logout();
-      return false;
+      if (err.status === 0) {
+        return { success: false, error: 'Erro de conexão: O servidor backend não está respondendo.' };
+      }
+      if (err.status === 401) {
+        return { success: false, error: 'Token inválido. Verifique e tente novamente.' };
+      }
+      return { success: false, error: 'Erro ao tentar autenticar. Verifique sua conexão.' };
     }
   }
 
