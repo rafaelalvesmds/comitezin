@@ -1,27 +1,38 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Person, Cargo, Step, getNextStep, PromotionRecord, ActivityRecord, Competencies } from '../models/person.model';
+import { environment } from '../../environments/environment';
+import { Person, Cargo, Step, getNextStep, PromotionRecord, Competencies, Feedback } from '../models/person.model';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
   private http = inject(HttpClient);
-  private apiUrl = '/api/people';
+  private authService = inject(AuthService);
+  private apiUrl = `${environment.apiUrl}/people`;
 
   readonly people = signal<Person[]>([]);
   readonly loading = signal(true);
-  readonly activities = signal<ActivityRecord[]>([]);
   readonly squads = signal<string[]>([]);
+
+  private get headers() {
+    const token = this.authService.token();
+    return {
+      headers: {
+        'X-Device-Id': this.authService.deviceId(),
+        ...(token ? { 'Authorization': token } : {})
+      }
+    };
+  }
 
   constructor() {
     this.loadPeople();
-    this.loadActivities();
     this.loadSquads();
   }
 
   async loadPeople(): Promise<void> {
     this.loading.set(true);
     try {
-      const list = await this.http.get<Person[]>(this.apiUrl).toPromise();
+      const list = await this.http.get<Person[]>(this.apiUrl, this.headers).toPromise();
       this.people.set(list ?? []);
     } catch (err) {
       console.error('Erro ao carregar pessoas', err);
@@ -31,64 +42,50 @@ export class DataService {
   }
 
   async addPerson(name: string, cargo: Cargo, step: Step, squad: string = ''): Promise<void> {
-    await this.http.post(this.apiUrl, { name, cargo, step, squad }).toPromise();
+    await this.http.post(this.apiUrl, { name, cargo, step, squad }, this.headers).toPromise();
     await this.loadPeople();
-    await this.loadActivities();
     await this.loadSquads();
   }
 
   async updateExpectation(id: string, expects: boolean): Promise<void> {
-    await this.http.patch(this.apiUrl + '/' + id, { expectsPromotion: expects }).toPromise();
+    await this.http.patch(this.apiUrl + '/' + id, { expectsPromotion: expects }, this.headers).toPromise();
     await this.loadPeople();
-    await this.loadActivities();
   }
 
   async markPromoted(id: string, promoted: boolean, currentStep: Step, cargo: Cargo, committeeMonth: string, notes: string = ''): Promise<void> {
     if (promoted) {
       const nextStep = getNextStep(currentStep, cargo);
       if (nextStep) {
-        await this.http.patch(this.apiUrl + '/' + id, { promoted: true, step: nextStep }).toPromise();
-        await this.http.post('/api/promotions', {
+        await this.http.patch(this.apiUrl + '/' + id, { promoted: true, step: nextStep }, this.headers).toPromise();
+        await this.http.post(`${environment.apiUrl}/promotions`, {
           personId: id,
           fromStep: currentStep,
           toStep: nextStep,
           committeeMonth,
           notes,
-        }).toPromise();
+        }, this.headers).toPromise();
       }
     } else {
-      await this.http.patch(this.apiUrl + '/' + id, { promoted: false }).toPromise();
+      await this.http.patch(this.apiUrl + '/' + id, { promoted: false }, this.headers).toPromise();
     }
     await this.loadPeople();
-    await this.loadActivities();
   }
 
   async removePerson(id: string): Promise<void> {
-    await this.http.delete(this.apiUrl + '/' + id).toPromise();
+    await this.http.delete(this.apiUrl + '/' + id, this.headers).toPromise();
     await this.loadPeople();
-    await this.loadActivities();
   }
 
   async updateSquad(id: string, squad: string): Promise<void> {
-    await this.http.patch(this.apiUrl + '/' + id, { squad }).toPromise();
+    await this.http.patch(this.apiUrl + '/' + id, { squad }, this.headers).toPromise();
     await this.loadPeople();
     await this.loadSquads();
-  }
-
-  // ── Activities ──────────────────────────────────────────
-  async loadActivities(): Promise<void> {
-    try {
-      const list = await this.http.get<ActivityRecord[]>('/api/activities?limit=30').toPromise();
-      this.activities.set(list ?? []);
-    } catch (err) {
-      console.error('Erro ao carregar atividades', err);
-    }
   }
 
   // ── Squads ──────────────────────────────────────────────
   async loadSquads(): Promise<void> {
     try {
-      const list = await this.http.get<string[]>('/api/squads').toPromise();
+      const list = await this.http.get<string[]>(`${environment.apiUrl}/squads`, this.headers).toPromise();
       this.squads.set(list ?? []);
     } catch (err) {
       console.error('Erro ao carregar squads', err);
@@ -98,7 +95,7 @@ export class DataService {
   // ── Promotion History ───────────────────────────────────
   async getPromotionHistory(personId: string): Promise<PromotionRecord[]> {
     try {
-      const list = await this.http.get<PromotionRecord[]>(`/api/promotions/${personId}`).toPromise();
+      const list = await this.http.get<PromotionRecord[]>(`${environment.apiUrl}/promotions/${personId}`, this.headers).toPromise();
       return list ?? [];
     } catch (err) {
       console.error('Erro ao carregar histórico', err);
@@ -108,7 +105,7 @@ export class DataService {
 
   async getAllPromotions(): Promise<PromotionRecord[]> {
     try {
-      const list = await this.http.get<PromotionRecord[]>('/api/promotions').toPromise();
+      const list = await this.http.get<PromotionRecord[]>(`${environment.apiUrl}/promotions`, this.headers).toPromise();
       return list ?? [];
     } catch (err) {
       console.error('Erro ao carregar promoções', err);
@@ -119,7 +116,7 @@ export class DataService {
   // ── Competencies ────────────────────────────────────────
   async getCompetencies(personId: string): Promise<Competencies> {
     try {
-      const result = await this.http.get<Competencies>(`/api/competencies/${personId}`).toPromise();
+      const result = await this.http.get<Competencies>(`${environment.apiUrl}/competencies/${personId}`, this.headers).toPromise();
       return result ?? { personId, tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1 };
     } catch (err) {
       console.error('Erro ao carregar competências', err);
@@ -128,6 +125,30 @@ export class DataService {
   }
 
   async saveCompetencies(personId: string, competencies: Competencies): Promise<void> {
-    await this.http.put(`/api/competencies/${personId}`, competencies).toPromise();
+    await this.http.put(`${environment.apiUrl}/competencies/${personId}`, competencies, this.headers).toPromise();
+  }
+
+  async sendFeedback(personId: string | null, message: string, isAnonymous: boolean): Promise<void> {
+    await this.http.post(`${environment.apiUrl}/feedback`, { personId, message, isAnonymous }, this.headers).toPromise();
+  }
+
+  async getFeedbacks(personId: string): Promise<Feedback[]> {
+    console.log(`[DataService] Buscando feedbacks para personId: ${personId}`);
+    try {
+      const list = await this.http.get<Feedback[]>(`${environment.apiUrl}/feedback/${personId}`, this.headers).toPromise();
+      console.log(`[DataService] Feedbacks retornados: ${list?.length || 0}`);
+      return list ?? [];
+    } catch (err) {
+      console.error('[DataService] Erro ao buscar feedbacks', err);
+      return [];
+    }
+  }
+
+  async updateFeedback(id: string, message: string): Promise<void> {
+    await this.http.patch(`${environment.apiUrl}/feedback/${id}`, { message }, this.headers).toPromise();
+  }
+
+  async deleteFeedback(id: string): Promise<void> {
+    await this.http.delete(`${environment.apiUrl}/feedback/${id}`, this.headers).toPromise();
   }
 }

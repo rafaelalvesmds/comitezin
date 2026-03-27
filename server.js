@@ -1,6 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
 const path = require('path');
 
 const app = express();
@@ -13,65 +16,68 @@ const pool = new Pool({
 });
 
 async function initDb() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS people (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      name VARCHAR(255) NOT NULL,
-      cargo VARCHAR(50) NOT NULL,
-      step VARCHAR(50),
-      expects_promotion BOOLEAN DEFAULT false,
-      promoted BOOLEAN DEFAULT false,
-      squad VARCHAR(100) DEFAULT '',
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS promotion_history (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      person_id UUID NOT NULL REFERENCES people(id) ON DELETE CASCADE,
-      from_step VARCHAR(50),
-      to_step VARCHAR(50),
-      from_cargo VARCHAR(50),
-      to_cargo VARCHAR(50),
-      promoted_at TIMESTAMP DEFAULT NOW(),
-      committee_month VARCHAR(20) NOT NULL,
-      notes TEXT DEFAULT ''
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS activity_log (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      person_id UUID REFERENCES people(id) ON DELETE SET NULL,
-      person_name VARCHAR(255) NOT NULL,
-      action VARCHAR(50) NOT NULL,
-      details TEXT DEFAULT '',
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS competencies (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      person_id UUID NOT NULL REFERENCES people(id) ON DELETE CASCADE,
-      tecnico INTEGER DEFAULT 1 CHECK (tecnico BETWEEN 1 AND 5),
-      comunicacao INTEGER DEFAULT 1 CHECK (comunicacao BETWEEN 1 AND 5),
-      lideranca INTEGER DEFAULT 1 CHECK (lideranca BETWEEN 1 AND 5),
-      autonomia INTEGER DEFAULT 1 CHECK (autonomia BETWEEN 1 AND 5),
-      impacto INTEGER DEFAULT 1 CHECK (impacto BETWEEN 1 AND 5),
-      updated_at TIMESTAMP DEFAULT NOW(),
-      UNIQUE(person_id)
-    );
-  `);
-
-  // Migration logic
   try {
-    // 1. Add step column to people if it doesn't exist
+    // 1. Create people table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS people (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        cargo VARCHAR(50) NOT NULL,
+        step VARCHAR(50),
+        expects_promotion BOOLEAN DEFAULT false,
+        promoted BOOLEAN DEFAULT false,
+        squad VARCHAR(100) DEFAULT '',
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // 2. Create promotion_history table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS promotion_history (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        person_id UUID NOT NULL REFERENCES people(id) ON DELETE CASCADE,
+        from_step VARCHAR(50),
+        to_step VARCHAR(50),
+        from_cargo VARCHAR(50),
+        to_cargo VARCHAR(50),
+        promoted_at TIMESTAMP DEFAULT NOW(),
+        committee_month VARCHAR(20) NOT NULL,
+        notes TEXT DEFAULT ''
+      );
+    `);
+
+    // 3. Create competencies table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS competencies (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        person_id UUID NOT NULL REFERENCES people(id) ON DELETE CASCADE,
+        tecnico INTEGER DEFAULT 1 CHECK (tecnico BETWEEN 1 AND 5),
+        comunicacao INTEGER DEFAULT 1 CHECK (comunicacao BETWEEN 1 AND 5),
+        lideranca INTEGER DEFAULT 1 CHECK (lideranca BETWEEN 1 AND 5),
+        autonomia INTEGER DEFAULT 1 CHECK (autonomia BETWEEN 1 AND 5),
+        impacto INTEGER DEFAULT 1 CHECK (impacto BETWEEN 1 AND 5),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(person_id)
+      );
+    `);
+
+    // 5. Create feedback table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS feedback (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        person_id UUID REFERENCES people(id) ON DELETE SET NULL,
+        message TEXT NOT NULL,
+        is_anonymous BOOLEAN DEFAULT false,
+        ip_address VARCHAR(45),
+        device_id VARCHAR(100),
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // Migration logic
+    await pool.query(`ALTER TABLE feedback ADD COLUMN IF NOT EXISTS device_id VARCHAR(100)`);
     await pool.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS step VARCHAR(50)`);
     
-    // 2. If step is null, it means we haven't migrated yet. 
-    // Fill step with current cargo and set cargo to a default value.
     const { rows: pendingMigration } = await pool.query(`SELECT id FROM people WHERE step IS NULL LIMIT 1`);
     if (pendingMigration.length > 0) {
       console.log('Migrating people data: cargo -> step');
@@ -79,38 +85,47 @@ async function initDb() {
       await pool.query(`UPDATE people SET cargo = 'Analista de Sistemas' WHERE cargo IN ('Junior I', 'Junior II', 'Pleno I', 'Pleno II', 'Pleno III', 'Senior I', 'Senior II', 'Senior III', 'Especialista de Software I', 'Especialista de Software II', 'Especialista de Software III', 'Especialista de Software IIII', 'Especialista de Software IIIII', 'Arquiteto Junior', 'Arquiteto Especialista MIL')`);
     }
 
-    // 3. Add step columns to promotion_history
     await pool.query(`ALTER TABLE promotion_history ADD COLUMN IF NOT EXISTS from_step VARCHAR(50)`);
     await pool.query(`ALTER TABLE promotion_history ADD COLUMN IF NOT EXISTS to_step VARCHAR(50)`);
-    
-    // 4. Migrate promotion_history
+
     const { rows: pendingPromoMigration } = await pool.query(`SELECT id FROM promotion_history WHERE from_step IS NULL LIMIT 1`);
     if (pendingPromoMigration.length > 0) {
-      console.log('Migrating promotion_history: cargo -> step');
       await pool.query(`UPDATE promotion_history SET from_step = from_cargo, to_step = to_cargo WHERE from_step IS NULL`);
     }
-  } catch (e) {
-    console.warn('Migration warning:', e.message);
+  } catch (err) {
+    console.error('Database migration/init error:', err.message);
   }
 
   console.log('Database tables ready');
 }
 
-// ── Middleware ───────────────────────────────────────────────
+app.set('trust proxy', true);
+app.use(helmet({
+  contentSecurityPolicy: false, // Angular handles CSP usually, or we can configure specifically
+}));
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 
-// ── Helper: log activity ────────────────────────────────────
-async function logActivity(personId, personName, action, details = '') {
-  try {
-    await pool.query(
-      'INSERT INTO activity_log (person_id, person_name, action, details) VALUES ($1, $2, $3, $4)',
-      [personId, personName, action, details]
-    );
-  } catch (err) {
-    console.error('Erro ao registrar atividade', err);
+// ── Auth Middleware ──────────────────────────────────────────
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '123e4567-e89b-12d3-a456-426614174000';
+
+const authMiddleware = (req, res, next) => {
+  const token = req.header('Authorization');
+  if (token !== ADMIN_TOKEN) {
+    return res.status(401).json({ error: 'Não autorizado. Token inválido ou ausente.' });
   }
-}
+  next();
+};
+
+// Protect all /api routes
+app.use('/api', authMiddleware);
+
+// ── Auth Verification ──────────────────────────────────────────
+// Since this is under /api, it's protected. If it reaches here, token is valid.
+app.get('/api/auth/verify', (req, res) => {
+  res.json({ success: true });
+});
 
 // ── API Routes ──────────────────────────────────────────────
 
@@ -133,12 +148,12 @@ app.post('/api/people', async (req, res) => {
   if (!name || !cargo || !step) {
     return res.status(400).json({ error: 'Nome, cargo e step são obrigatórios' });
   }
+  const deviceId = req.header('X-Device-Id');
   try {
     const { rows } = await pool.query(
       'INSERT INTO people (name, cargo, step, squad) VALUES ($1, $2, $3, $4) RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, created_at AS "createdAt"',
       [name, cargo, step, squad || '']
     );
-    await logActivity(rows[0].id, name, 'added', `Adicionado(a) como ${cargo} (${step})`);
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -181,23 +196,10 @@ app.patch('/api/people/:id', async (req, res) => {
   values.push(id);
 
   try {
-    // Get current state for activity logging
-    const { rows: currentRows } = await pool.query('SELECT name, cargo, step, expects_promotion FROM people WHERE id = $1', [id]);
-    if (currentRows.length === 0) {
-      return res.status(404).json({ error: 'Pessoa não encontrada' });
-    }
-    const current = currentRows[0];
-
     const { rows } = await pool.query(
       `UPDATE people SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, created_at AS "createdAt"`,
       values
     );
-
-    // Log activities based on changes
-    if (fields.expectsPromotion !== undefined) {
-      await logActivity(id, current.name, fields.expectsPromotion ? 'expect_on' : 'expect_off',
-        fields.expectsPromotion ? 'Marcou expectativa de promoção' : 'Removeu expectativa de promoção');
-    }
 
     res.json(rows[0]);
   } catch (err) {
@@ -214,7 +216,6 @@ app.delete('/api/people/:id', async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Pessoa não encontrada' });
     }
-    await logActivity(null, rows[0].name, 'removed', `${rows[0].name} foi removido(a) do sistema`);
     await pool.query('DELETE FROM people WHERE id = $1', [id]);
     res.status(204).end();
   } catch (err) {
@@ -234,13 +235,8 @@ app.post('/api/promotions', async (req, res) => {
   try {
     const { rows } = await pool.query(
       'INSERT INTO promotion_history (person_id, from_step, to_step, committee_month, notes) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [personId, fromStep, toStep, committeeMonth, notes || '']
+      [personId, from_step || fromStep, to_step || toStep, committeeMonth, notes || '']
     );
-    // Get person name for activity log
-    const { rows: personRows } = await pool.query('SELECT name FROM people WHERE id = $1', [personId]);
-    const personName = personRows.length > 0 ? personRows[0].name : 'Desconhecido';
-    await logActivity(personId, personName, 'promoted', `Promovido(a) de ${fromStep} para ${toStep}${notes ? ' — ' + notes : ''}`);
-
     const result = rows[0];
     res.status(201).json({
       id: result.id,
@@ -290,22 +286,6 @@ app.get('/api/promotions', async (_req, res) => {
   }
 });
 
-// ── Activity Log ────────────────────────────────────────────
-
-app.get('/api/activities', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 20, 100);
-  try {
-    const { rows } = await pool.query(
-      'SELECT id, person_id AS "personId", person_name AS "personName", action, details, created_at AS "createdAt" FROM activity_log ORDER BY created_at DESC LIMIT $1',
-      [limit]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar atividades' });
-  }
-});
-
 // ── Competencies ────────────────────────────────────────────
 
 // GET competencies for person
@@ -337,6 +317,7 @@ app.put('/api/competencies/:personId', async (req, res) => {
     return res.status(400).json({ error: 'Valores devem estar entre 1 e 5' });
   }
 
+  const deviceId = req.header('X-Device-Id');
   try {
     const { rows } = await pool.query(
       `INSERT INTO competencies (person_id, tecnico, comunicacao, lideranca, autonomia, impacto, updated_at)
@@ -346,10 +327,130 @@ app.put('/api/competencies/:personId', async (req, res) => {
        RETURNING person_id AS "personId", tecnico, comunicacao, lideranca, autonomia, impacto, updated_at AS "updatedAt"`,
       [personId, tecnico, comunicacao, lideranca, autonomia, impacto]
     );
+
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao salvar competências' });
+  }
+});
+
+// ── Feedback ────────────────────────────────────────────────
+
+// Helper to normalize IP (handling IPv4 vs IPv6 loopback)
+const normalizeIP = (ip) => {
+  if (!ip) return '';
+  return ip.startsWith('::ffff:') ? ip.substring(7) : ip === '::1' ? '127.0.0.1' : ip;
+};
+
+app.get('/api/feedback/:personId', async (req, res) => {
+  const { personId } = req.params;
+  const clientDeviceId = req.header('X-Device-Id');
+  
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, person_id AS "personId", message, is_anonymous AS "isAnonymous", ip_address AS "ipAddress", device_id AS "deviceId", created_at AS "createdAt" FROM feedback WHERE person_id = $1 ORDER BY created_at DESC',
+      [personId]
+    );
+
+    // Add canEdit flag based on Device ID
+    const feedbacks = rows.map(fb => {
+      const isAuthor = fb.deviceId === clientDeviceId;
+      const isAnonymous = !!fb.isAnonymous;
+      
+      return {
+        ...fb,
+        canEdit: isAuthor,
+        // Show device id ONLY if NOT anonymous
+        deviceSlug: !isAnonymous && fb.deviceId ? fb.deviceId.substring(0, 4).toUpperCase() : undefined,
+        // Hide full sensitive info
+        ipAddress: isAuthor ? fb.ipAddress : undefined,
+        deviceId: undefined
+      };
+    });
+
+    res.json(feedbacks);
+  } catch (err) {
+    console.error(`Erro ao buscar feedbacks (ID: ${personId}):`, err.message);
+    res.status(500).json({ error: 'Erro ao buscar feedbacks' });
+  }
+});
+
+app.post('/api/feedback', async (req, res) => {
+  const { personId, message, isAnonymous } = req.body;
+  const deviceId = req.header('X-Device-Id');
+  
+  if (!message) {
+    return res.status(400).json({ error: 'Mensagem de feedback é obrigatória' });
+  }
+  if (!personId) {
+    return res.status(400).json({ error: 'O ID do destinatário é obrigatório' });
+  }
+
+  const clientIP = normalizeIP(req.ip);
+
+  try {
+    await pool.query(
+      'INSERT INTO feedback (person_id, message, is_anonymous, ip_address, device_id) VALUES ($1, $2, $3, $4, $5)',
+      [personId, message, !!isAnonymous, clientIP, deviceId]
+    );
+
+    // Log
+    res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('Erro ao enviar feedback:', err.message);
+    res.status(500).json({ error: 'Erro ao enviar feedback' });
+  }
+});
+
+app.patch('/api/feedback/:id', async (req, res) => {
+  const { id } = req.params;
+  const { message } = req.body;
+  const deviceId = req.header('X-Device-Id');
+
+  if (!message) {
+    return res.status(400).json({ error: 'Mensagem é obrigatória' });
+  }
+
+  try {
+    const { rows } = await pool.query('SELECT device_id, person_id FROM feedback WHERE id = $1', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Feedback não encontrado' });
+    }
+
+    if (rows[0].device_id !== deviceId) {
+      return res.status(403).json({ error: 'Apenas o autor pode editar este feedback' });
+    }
+
+    await pool.query('UPDATE feedback SET message = $1 WHERE id = $2', [message, id]);
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro ao editar feedback:', err.message);
+    res.status(500).json({ error: 'Erro ao editar feedback' });
+  }
+});
+
+app.delete('/api/feedback/:id', async (req, res) => {
+  const { id } = req.params;
+  const deviceId = req.header('X-Device-Id');
+
+  try {
+    const { rows } = await pool.query('SELECT device_id, person_id FROM feedback WHERE id = $1', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Feedback não encontrado' });
+    }
+
+    if (rows[0].device_id !== deviceId) {
+      return res.status(403).json({ error: 'Apenas o autor pode remover este feedback' });
+    }
+
+    await pool.query('DELETE FROM feedback WHERE id = $1', [id]);
+    
+    res.status(204).end();
+  } catch (err) {
+    console.error('Erro ao remover feedback:', err.message);
+    res.status(500).json({ error: 'Erro ao remover feedback' });
   }
 });
 

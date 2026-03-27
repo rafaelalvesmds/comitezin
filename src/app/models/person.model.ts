@@ -64,14 +64,6 @@ export interface PromotionRecord {
   notes: string;
 }
 
-export interface ActivityRecord {
-  id: string;
-  personId: string | null;
-  personName: string;
-  action: string;
-  details: string;
-  createdAt: string;
-}
 
 export interface Competencies {
   personId: string;
@@ -99,4 +91,15 @@ export function getNextStep(current: Step, cargo: Cargo): Step | null {
   }
   
   return next;
+}
+
+export interface Feedback {
+  id?: string;
+  personId?: string;
+  message: string;
+  isAnonymous: boolean;
+  canEdit?: boolean;
+  ipAddress?: string;
+  deviceSlug?: string;
+  createdAt?: string;
 }

@@ -59,12 +59,16 @@ export class Charts implements OnDestroy {
   private renderDoughnut(canvas: HTMLCanvasElement, dist: Record<string, number>) {
     if (this.doughnutChart) this.doughnutChart.destroy();
 
-    const labels = Object.keys(dist);
-    const data = Object.values(dist);
+    const filteredEntries = Object.entries(dist).filter(([_label, value]) => value > 0);
+    const labels = filteredEntries.map(([label]) => label);
+    const data = filteredEntries.map(([_label, value]) => value);
+
     const colors = [
       '#38bdf8', '#0ea5e9', // sky
       '#a78bfa', '#8b5cf6', '#7c3aed', // violet
       '#fbbf24', '#f59e0b', // amber
+      '#10b981', '#059669', // emerald
+      '#f43f5e', '#e11d48', // rose
     ];
 
     this.doughnutChart = new Chart(canvas, {
@@ -86,10 +90,12 @@ export class Charts implements OnDestroy {
             position: 'bottom',
             labels: {
               color: '#94a3b8',
-              padding: 12,
+              padding: 16,
               font: { size: 11 },
               usePointStyle: true,
-              pointStyleWidth: 8,
+              pointStyle: 'circle',
+              boxWidth: 6,
+              boxHeight: 6,
             },
           },
         },

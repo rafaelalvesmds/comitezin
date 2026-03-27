@@ -2,7 +2,6 @@ import { Component, computed, inject, signal, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PersonCard } from '../../components/person-card/person-card';
-import { ActivityFeed } from '../../components/activity-feed/activity-feed';
 import { Charts } from '../../components/charts/charts';
 import { Countdown } from '../../components/countdown/countdown';
 import { Cargo, Step, STEP_HIERARCHY } from '../../models/person.model';
@@ -13,7 +12,7 @@ import { ExportService } from '../../services/export.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [FormsModule, PersonCard, ActivityFeed, Charts, Countdown],
+  imports: [FormsModule, PersonCard, Charts, Countdown],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

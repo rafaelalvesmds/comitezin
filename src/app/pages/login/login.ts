@@ -12,6 +12,7 @@ import { AuthService } from '../../services/auth.service';
 export class Login {
   token = signal('');
   error = signal('');
+  isLoading = signal(false);
 
   constructor(
     private auth: AuthService,
@@ -22,17 +23,27 @@ export class Login {
     }
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     const value = this.token();
     if (!value.trim()) {
       this.error.set('Por favor, insira o token de acesso.');
       return;
     }
 
-    if (this.auth.login(value)) {
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.error.set('Token inválido. Verifique e tente novamente.');
+    this.isLoading.set(true);
+    this.error.set('');
+
+    try {
+      const success = await this.auth.login(value);
+      if (success) {
+        this.router.navigate(['/dashboard']);
+      } else {
+        this.error.set('Token inválido. Verifique e tente novamente.');
+      }
+    } catch (err) {
+      this.error.set('Erro ao tentar autenticar. Verifique sua conexão.');
+    } finally {
+      this.isLoading.set(false);
     }
   }
 }

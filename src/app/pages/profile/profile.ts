@@ -5,7 +5,7 @@ import { DataService } from '../../services/data.service';
 import { CommitteeService } from '../../services/committee.service';
 import { AuthService } from '../../services/auth.service';
 import { RadarChart } from '../../components/radar-chart/radar-chart';
-import { Person, Competencies, PromotionRecord, Cargo, Step, STEP_HIERARCHY } from '../../models/person.model';
+import { Person, Competencies, PromotionRecord, Cargo, Step, STEP_HIERARCHY, Feedback } from '../../models/person.model';
 
 const STEP_COLORS: Record<string, string> = {
   [Step.ESTAGIARIO]: 'bg-slate-900 text-slate-400',
@@ -46,40 +46,71 @@ export class Profile implements OnInit {
   formAutonomia = signal(1);
   formImpacto = signal(1);
 
+  // Feedback form
+  feedbacks = signal<Feedback[]>([]);
+  feedbackMessage = signal('');
+  isAnonymous = signal(false);
+  isSendingFeedback = signal(false);
+  feedbackStatus = signal<'idle' | 'success' | 'error'>('idle');
+
+  // Editing feedback
+  editingFeedbackId = signal<string | null>(null);
+  editMessage = signal('');
+  isSavingEdit = signal(false);
+
   readonly steps = STEP_HIERARCHY;
   readonly cargos = Object.values(Cargo);
   readonly committee = this.committeeService.getNextCommittee();
 
-  async ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (!id) {
-      this.router.navigate(['/dashboard']);
-      return;
-    }
+  ngOnInit() {
+    this.route.paramMap.subscribe(async params => {
+      const id = params.get('id');
+      if (!id) {
+        this.router.navigate(['/dashboard']);
+        return;
+      }
 
-    await this.dataService.loadPeople();
-    const found = this.dataService.people().find(p => p.id === id);
-    if (!found) {
-      this.router.navigate(['/dashboard']);
-      return;
-    }
+      // Reset state when profile changes
+      this.person.set(null);
+      this.feedbacks.set([]);
+      this.feedbackStatus.set('idle');
+      this.feedbackMessage.set('');
 
-    this.person.set(found);
-    this.newSquad.set(found.squad || '');
+      try {
+        await this.dataService.loadPeople();
+        const found = this.dataService.people().find(p => p.id === id);
+        if (!found) {
+          this.router.navigate(['/dashboard']);
+          return;
+        }
 
-    const [comp, history] = await Promise.all([
-      this.dataService.getCompetencies(id),
-      this.dataService.getPromotionHistory(id),
-    ]);
+        this.person.set(found);
+        this.newSquad.set(found.squad || '');
 
-    this.competencies.set(comp);
-    this.promotionHistory.set(history);
+        const [comp, history] = await Promise.all([
+          this.dataService.getCompetencies(id),
+          this.dataService.getPromotionHistory(id),
+        ]);
 
-    this.formTecnico.set(comp.tecnico);
-    this.formComunicacao.set(comp.comunicacao);
-    this.formLideranca.set(comp.lideranca);
-    this.formAutonomia.set(comp.autonomia);
-    this.formImpacto.set(comp.impacto);
+        this.competencies.set(comp);
+        this.promotionHistory.set(history);
+
+        this.formTecnico.set(comp.tecnico);
+        this.formComunicacao.set(comp.comunicacao);
+        this.formLideranca.set(comp.lideranca);
+        this.formAutonomia.set(comp.autonomia);
+        this.formImpacto.set(comp.impacto);
+
+        await this.loadFeedbacks(id);
+      } catch (err) {
+        console.error('Erro ao inicializar perfil:', err);
+      }
+    });
+  }
+
+  async loadFeedbacks(personId: string) {
+    const list = await this.dataService.getFeedbacks(personId);
+    this.feedbacks.set(list);
   }
 
   stepClass(step: string): string {
@@ -143,6 +174,65 @@ export class Profile implements OnInit {
 
   goBack() {
     this.router.navigate(['/dashboard']);
+  }
+
+  async sendFeedback() {
+    const p = this.person();
+    if (!p || !this.feedbackMessage().trim()) return;
+
+    this.isSendingFeedback.set(true);
+    this.feedbackStatus.set('idle');
+    try {
+      await this.dataService.sendFeedback(p.id, this.feedbackMessage(), this.isAnonymous());
+      this.feedbackStatus.set('success');
+      this.feedbackMessage.set('');
+      await this.loadFeedbacks(p.id);
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => this.feedbackStatus.set('idle'), 3000);
+    } catch (err) {
+      console.error('Erro ao enviar feedback', err);
+      this.feedbackStatus.set('error');
+    } finally {
+      this.isSendingFeedback.set(false);
+    }
+  }
+
+  startEdit(fb: Feedback) {
+    if (!fb.id) return;
+    this.editingFeedbackId.set(fb.id);
+    this.editMessage.set(fb.message);
+  }
+
+  cancelEdit() {
+    this.editingFeedbackId.set(null);
+    this.editMessage.set('');
+  }
+
+  async saveEdit(id: string) {
+    if (!this.editMessage().trim()) return;
+    this.isSavingEdit.set(true);
+    try {
+      await this.dataService.updateFeedback(id, this.editMessage());
+      const p = this.person();
+      if (p) await this.loadFeedbacks(p.id);
+      this.cancelEdit();
+    } catch (err) {
+      console.error('Erro ao salvar edição', err);
+    } finally {
+      this.isSavingEdit.set(false);
+    }
+  }
+
+  async deleteFeedback(id: string) {
+    if (!confirm('Tem certeza que deseja remover este feedback?')) return;
+    try {
+      await this.dataService.deleteFeedback(id);
+      const p = this.person();
+      if (p) await this.loadFeedbacks(p.id);
+    } catch (err) {
+      console.error('Erro ao remover feedback', err);
+    }
   }
 
   logout() {
