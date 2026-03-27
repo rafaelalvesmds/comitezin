@@ -34,14 +34,14 @@ export class Login {
     this.error.set('');
 
     try {
-      const success = await this.auth.login(value);
-      if (success) {
+      const response = await this.auth.login(value);
+      if (response.success) {
         this.router.navigate(['/dashboard']);
       } else {
-        this.error.set('Token inválido. Verifique e tente novamente.');
+        this.error.set(response.error || 'Token inválido.');
       }
     } catch (err) {
-      this.error.set('Erro ao tentar autenticar. Verifique sua conexão.');
+      this.error.set('Erro inesperado ao tentar autenticar.');
     } finally {
       this.isLoading.set(false);
     }
