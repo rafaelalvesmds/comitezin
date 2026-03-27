@@ -329,4 +329,17 @@
 
     <!-- No activity feed here -->
   </main>
+
+  <!-- Remove Person Confirmation Modal -->
+  @if (showRemoveModal()) {
+    <app-confirm-modal
+      title="Remover Pessoa"
+      message="Tem certeza que deseja remover esta pessoa do sistema? Esta ação não pode ser desfeita."
+      confirmText="Remover"
+      cancelText="Cancelar"
+      [isDanger]="true"
+      (confirm)="confirmRemove()"
+      (cancel)="cancelRemove()"
+    />
+  }
 </div>

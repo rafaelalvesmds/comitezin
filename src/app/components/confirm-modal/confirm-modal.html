@@ -1,0 +1,51 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-x-hidden overflow-y-auto outline-none focus:outline-none">
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" (click)="onCancel()"></div>
+
+  <!-- Modal Card -->
+  <div class="relative w-full max-w-md mx-auto bg-[#12121a] rounded-2xl border border-white/10 shadow-2xl shadow-black/50 transform transition-all animate-in fade-in zoom-in duration-200">
+    <div class="p-6">
+      <div class="flex items-start gap-4">
+        <!-- Icon -->
+        <div class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
+          [class]="isDanger() ? 'bg-red-500/10 text-red-400' : 'bg-indigo-500/10 text-indigo-400'">
+          @if (isDanger()) {
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          } @else {
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        </div>
+
+        <div class="flex-1">
+          <h3 class="text-xl font-bold text-white mb-2 leading-tight">
+            {{ title() }}
+          </h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            {{ message() }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row gap-3 mt-8">
+        <button
+          (click)="onCancel()"
+          class="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all cursor-pointer text-center"
+        >
+          {{ cancelText() }}
+        </button>
+        <button
+          (click)="onConfirm()"
+          class="flex-1 px-4 py-2.5 text-sm font-semibold text-white rounded-xl transition-all shadow-lg cursor-pointer text-center"
+          [class]="isDanger() ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 shadow-red-500/20' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-indigo-500/20'"
+        >
+          {{ confirmText() }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -5,6 +5,7 @@ import { DataService } from '../../services/data.service';
 import { CommitteeService } from '../../services/committee.service';
 import { AuthService } from '../../services/auth.service';
 import { RadarChart } from '../../components/radar-chart/radar-chart';
+import { ConfirmModal } from '../../components/confirm-modal/confirm-modal';
 import { Person, Competencies, PromotionRecord, Cargo, Step, STEP_HIERARCHY, Feedback } from '../../models/person.model';
 
 const STEP_COLORS: Record<string, string> = {
@@ -20,7 +21,7 @@ const STEP_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-profile',
-  imports: [FormsModule, RadarChart],
+  imports: [FormsModule, RadarChart, ConfirmModal],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -57,6 +58,10 @@ export class Profile implements OnInit {
   editingFeedbackId = signal<string | null>(null);
   editMessage = signal('');
   isSavingEdit = signal(false);
+
+  // Delete feedback modal
+  showDeleteModal = signal(false);
+  feedbackToDelete = signal<string | null>(null);
 
   readonly steps = STEP_HIERARCHY;
   readonly cargos = Object.values(Cargo);
@@ -225,14 +230,28 @@ export class Profile implements OnInit {
   }
 
   async deleteFeedback(id: string) {
-    if (!confirm('Tem certeza que deseja remover este feedback?')) return;
+    this.feedbackToDelete.set(id);
+    this.showDeleteModal.set(true);
+  }
+
+  async confirmDeleteFeedback() {
+    const id = this.feedbackToDelete();
+    if (!id) return;
+
     try {
       await this.dataService.deleteFeedback(id);
       const p = this.person();
       if (p) await this.loadFeedbacks(p.id);
     } catch (err) {
       console.error('Erro ao remover feedback', err);
+    } finally {
+      this.cancelDeleteFeedback();
     }
+  }
+
+  cancelDeleteFeedback() {
+    this.showDeleteModal.set(false);
+    this.feedbackToDelete.set(null);
   }
 
   logout() {

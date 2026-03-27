@@ -315,4 +315,17 @@
       <div class="w-8 h-8 border-4 border-indigo-900 border-t-indigo-500 rounded-full animate-spin"></div>
     </div>
   }
+
+  <!-- Delete Feedback Confirmation Modal -->
+  @if (showDeleteModal()) {
+    <app-confirm-modal
+      title="Remover Feedback"
+      message="Tem certeza que deseja remover este feedback? Esta ação não pode ser desfeita."
+      confirmText="Remover"
+      cancelText="Cancelar"
+      [isDanger]="true"
+      (confirm)="confirmDeleteFeedback()"
+      (cancel)="cancelDeleteFeedback()"
+    />
+  }
 </div>

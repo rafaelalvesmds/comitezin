@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { PersonCard } from '../../components/person-card/person-card';
 import { Charts } from '../../components/charts/charts';
 import { Countdown } from '../../components/countdown/countdown';
+import { ConfirmModal } from '../../components/confirm-modal/confirm-modal';
 import { Cargo, Step, STEP_HIERARCHY } from '../../models/person.model';
 import { AuthService } from '../../services/auth.service';
 import { CommitteeService } from '../../services/committee.service';
@@ -12,7 +13,7 @@ import { ExportService } from '../../services/export.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [FormsModule, PersonCard, Charts, Countdown],
+  imports: [FormsModule, PersonCard, Charts, Countdown, ConfirmModal],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -42,6 +43,10 @@ export class Dashboard {
   filterStep = signal<string>('');
   filterSquad = signal<string>('');
   filterStatus = signal<string>('');
+
+  // Remove person modal
+  showRemoveModal = signal(false);
+  personToRemove = signal<string | null>(null);
 
   private committeeService = inject(CommitteeService);
   private authService = inject(AuthService);
@@ -134,7 +139,25 @@ export class Dashboard {
   }
 
   async onRemove(id: string): Promise<void> {
-    await this.dataService.removePerson(id);
+    this.personToRemove.set(id);
+    this.showRemoveModal.set(true);
+  }
+
+  async confirmRemove(): Promise<void> {
+    const id = this.personToRemove();
+    if (!id) return;
+    try {
+      await this.dataService.removePerson(id);
+    } catch (err) {
+      console.error('Erro ao remover pessoa', err);
+    } finally {
+      this.cancelRemove();
+    }
+  }
+
+  cancelRemove(): void {
+    this.showRemoveModal.set(false);
+    this.personToRemove.set(null);
   }
 
   clearFilters(): void {
