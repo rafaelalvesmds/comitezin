@@ -63,6 +63,9 @@ export class Profile implements OnInit {
   showDeleteModal = signal(false);
   feedbackToDelete = signal<string | null>(null);
 
+  // Reply functionality
+  replyingTo = signal<Feedback | null>(null);
+
   readonly steps = STEP_HIERARCHY;
   readonly cargos = Object.values(Cargo);
   readonly committee = this.committeeService.getNextCommittee();
@@ -188,9 +191,15 @@ export class Profile implements OnInit {
     this.isSendingFeedback.set(true);
     this.feedbackStatus.set('idle');
     try {
-      await this.dataService.sendFeedback(p.id, this.feedbackMessage(), this.isAnonymous());
+      await this.dataService.sendFeedback(
+        p.id, 
+        this.feedbackMessage(), 
+        this.isAnonymous(), 
+        this.replyingTo()?.id
+      );
       this.feedbackStatus.set('success');
       this.feedbackMessage.set('');
+      this.cancelReply();
       await this.loadFeedbacks(p.id);
       
       // Reset success message after 3 seconds
@@ -252,6 +261,57 @@ export class Profile implements OnInit {
   cancelDeleteFeedback() {
     this.showDeleteModal.set(false);
     this.feedbackToDelete.set(null);
+  }
+
+  setReply(fb: Feedback) {
+    this.replyingTo.set(fb);
+    // Smooth scroll to input
+    const input = document.getElementById('feedback-input');
+    if (input) {
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input.focus();
+    }
+  }
+
+  cancelReply() {
+    this.replyingTo.set(null);
+  }
+
+  async toggleLike(fb: Feedback) {
+    if (!fb.id) return;
+    
+    // Optimistic update
+    const currentLiked = !!fb.likedByMe;
+    const currentCount = fb.likesCount || 0;
+    
+    const updatedFeedbacks = this.feedbacks().map(f => {
+      if (f.id === fb.id) {
+        return {
+          ...f,
+          likedByMe: !currentLiked,
+          likesCount: currentLiked ? currentCount - 1 : currentCount + 1
+        };
+      }
+      return f;
+    });
+    this.feedbacks.set(updatedFeedbacks);
+
+    try {
+      await this.dataService.toggleLike(fb.id);
+    } catch (err) {
+      console.error('Erro ao curtir feedback', err);
+      // Revert on error
+      this.feedbacks.set(this.feedbacks().map(f => {
+        if (f.id === fb.id) {
+          return {
+            ...f,
+            likedByMe: currentLiked,
+            likesCount: currentCount
+          };
+        }
+        return f;
+      }));
+    }
   }
 
   logout() {

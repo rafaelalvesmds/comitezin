@@ -102,4 +102,9 @@ export interface Feedback {
   ipAddress?: string;
   deviceSlug?: string;
   createdAt?: string;
+  likesCount?: number;
+  likedByMe?: boolean;
+  parentId?: string;
+  parentMessage?: string;
+  parentIsAnonymous?: boolean;
 }

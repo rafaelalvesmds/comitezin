@@ -70,12 +70,23 @@ async function initDb() {
         is_anonymous BOOLEAN DEFAULT false,
         ip_address VARCHAR(45),
         device_id VARCHAR(100),
+        parent_id UUID REFERENCES feedback(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // 6. Create feedback_likes table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS feedback_likes (
+        feedback_id UUID NOT NULL REFERENCES feedback(id) ON DELETE CASCADE,
+        device_id VARCHAR(100) NOT NULL,
+        PRIMARY KEY (feedback_id, device_id)
       );
     `);
 
     // Migration logic
     await pool.query(`ALTER TABLE feedback ADD COLUMN IF NOT EXISTS device_id VARCHAR(100)`);
+    await pool.query(`ALTER TABLE feedback ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES feedback(id) ON DELETE SET NULL`);
     await pool.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS step VARCHAR(50)`);
     
     const { rows: pendingMigration } = await pool.query(`SELECT id FROM people WHERE step IS NULL LIMIT 1`);
@@ -349,8 +360,16 @@ app.get('/api/feedback/:personId', async (req, res) => {
   
   try {
     const { rows } = await pool.query(
-      'SELECT id, person_id AS "personId", message, is_anonymous AS "isAnonymous", ip_address AS "ipAddress", device_id AS "deviceId", created_at AS "createdAt" FROM feedback WHERE person_id = $1 ORDER BY created_at DESC',
-      [personId]
+      `SELECT f.id, f.person_id AS "personId", f.message, f.is_anonymous AS "isAnonymous", 
+              f.ip_address AS "ipAddress", f.device_id AS "deviceId", f.created_at AS "createdAt",
+              f.parent_id AS "parentId", p.message AS "parentMessage", p.is_anonymous AS "parentIsAnonymous",
+              (SELECT COUNT(*) FROM feedback_likes FL WHERE FL.feedback_id = f.id) AS "likesCount",
+              EXISTS (SELECT 1 FROM feedback_likes FL WHERE FL.feedback_id = f.id AND FL.device_id = $2) AS "likedByMe"
+       FROM feedback f
+       LEFT JOIN feedback p ON f.parent_id = p.id
+       WHERE f.person_id = $1 
+       ORDER BY f.created_at DESC`,
+      [personId, clientDeviceId || '']
     );
 
     // Add canEdit flag based on Device ID
@@ -361,6 +380,7 @@ app.get('/api/feedback/:personId', async (req, res) => {
       return {
         ...fb,
         canEdit: isAuthor,
+        likesCount: parseInt(fb.likesCount, 10) || 0,
         // Show device id ONLY if NOT anonymous
         deviceSlug: !isAnonymous && fb.deviceId ? fb.deviceId.substring(0, 4).toUpperCase() : undefined,
         // Hide full sensitive info
@@ -376,8 +396,44 @@ app.get('/api/feedback/:personId', async (req, res) => {
   }
 });
 
+app.post('/api/feedback/:id/like', async (req, res) => {
+  const { id } = req.params;
+  const deviceId = req.header('X-Device-Id');
+
+  if (!deviceId) {
+    return res.status(400).json({ error: 'X-Device-Id é obrigatório' });
+  }
+
+  try {
+    // Check if liked
+    const { rows } = await pool.query(
+      'SELECT 1 FROM feedback_likes WHERE feedback_id = $1 AND device_id = $2',
+      [id, deviceId]
+    );
+
+    if (rows.length > 0) {
+      // Remove like
+      await pool.query(
+        'DELETE FROM feedback_likes WHERE feedback_id = $1 AND device_id = $2',
+        [id, deviceId]
+      );
+    } else {
+      // Add like
+      await pool.query(
+        'INSERT INTO feedback_likes (feedback_id, device_id) VALUES ($1, $2)',
+        [id, deviceId]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro ao curtir feedback:', err.message);
+    res.status(500).json({ error: 'Erro ao processar curtida' });
+  }
+});
+
 app.post('/api/feedback', async (req, res) => {
-  const { personId, message, isAnonymous } = req.body;
+  const { personId, message, isAnonymous, parentId } = req.body;
   const deviceId = req.header('X-Device-Id');
   
   if (!message) {
@@ -391,8 +447,8 @@ app.post('/api/feedback', async (req, res) => {
 
   try {
     await pool.query(
-      'INSERT INTO feedback (person_id, message, is_anonymous, ip_address, device_id) VALUES ($1, $2, $3, $4, $5)',
-      [personId, message, !!isAnonymous, clientIP, deviceId]
+      'INSERT INTO feedback (person_id, message, is_anonymous, ip_address, device_id, parent_id) VALUES ($1, $2, $3, $4, $5, $6)',
+      [personId, message, !!isAnonymous, clientIP, deviceId, parentId || null]
     );
 
     // Log
