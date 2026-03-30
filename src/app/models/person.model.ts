@@ -51,6 +51,7 @@ export interface Person {
   promoted: boolean;
   squad: string;
   createdAt: string;
+  feedbackCount?: number;
 }
 
 export interface PromotionRecord {
@@ -102,4 +103,9 @@ export interface Feedback {
   ipAddress?: string;
   deviceSlug?: string;
   createdAt?: string;
+  likesCount?: number;
+  likedByMe?: boolean;
+  parentId?: string;
+  parentMessage?: string;
+  parentIsAnonymous?: boolean;
 }

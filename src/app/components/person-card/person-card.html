@@ -22,6 +22,14 @@
           @if (person().squad) {
             <span class="text-[10px] text-slate-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">{{ person().squad }}</span>
           }
+          @if ((person().feedbackCount ?? 0) > 0) {
+            <span class="text-[10px] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/10 flex items-center gap-1" title="Total de feedbacks">
+              <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              {{ person().feedbackCount }}
+            </span>
+          }
         </div>
       </div>
     </div>

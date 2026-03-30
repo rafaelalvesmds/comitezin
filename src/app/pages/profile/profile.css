@@ -16,3 +16,27 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border: 3px solid #0a0a0f;
 }
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+/* Custom transitions for heart button */
+.group\/like:hover svg {
+  transform: scale(1.1);
+}
+
+.group\/like:active svg {
+  transform: scale(1.2);
+}

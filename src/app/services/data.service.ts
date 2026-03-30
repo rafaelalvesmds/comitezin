@@ -128,8 +128,13 @@ export class DataService {
     await this.http.put(`${environment.apiUrl}/competencies/${personId}`, competencies, this.headers).toPromise();
   }
 
-  async sendFeedback(personId: string | null, message: string, isAnonymous: boolean): Promise<void> {
-    await this.http.post(`${environment.apiUrl}/feedback`, { personId, message, isAnonymous }, this.headers).toPromise();
+  async sendFeedback(personId: string | null, message: string, isAnonymous: boolean, parentId?: string): Promise<void> {
+    await this.http.post(`${environment.apiUrl}/feedback`, { personId, message, isAnonymous, parentId }, this.headers).toPromise();
+    await this.loadPeople();
+  }
+
+  async toggleLike(feedbackId: string): Promise<void> {
+    await this.http.post(`${environment.apiUrl}/feedback/${feedbackId}/like`, {}, this.headers).toPromise();
   }
 
   async getFeedbacks(personId: string): Promise<Feedback[]> {
@@ -150,5 +155,6 @@ export class DataService {
 
   async deleteFeedback(id: string): Promise<void> {
     await this.http.delete(`${environment.apiUrl}/feedback/${id}`, this.headers).toPromise();
+    await this.loadPeople();
   }
 }

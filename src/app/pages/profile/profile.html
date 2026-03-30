@@ -198,7 +198,23 @@
           <div class="space-y-4">
             <p class="text-xs text-slate-500">Envie um feedback sobre o desempenho ou contribuições.</p>
             
+            <!-- Replying to... preview box -->
+            @if (replyingTo(); as replying) {
+              <div class="bg-indigo-500/10 border-l-4 border-indigo-500 p-3 rounded-r-xl mb-3 flex justify-between items-start animate-in fade-in slide-in-from-top-2 duration-300">
+                <div class="overflow-hidden">
+                  <p class="text-[10px] font-bold text-indigo-400 uppercase mb-1">Respondendo a {{ replying.isAnonymous ? 'Anônimo' : 'Identificado' }}</p>
+                  <p class="text-sm text-slate-400 truncate italic">"{{ replying.message }}"</p>
+                </div>
+                <button (click)="cancelReply()" class="p-1 text-slate-500 hover:text-white transition-colors cursor-pointer" title="Cancelar resposta">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            }
+
             <textarea 
+              id="feedback-input"
               [ngModel]="feedbackMessage()" (ngModelChange)="feedbackMessage.set($event)"
               placeholder="Escreva seu feedback aqui..."
               class="w-full h-32 px-4 py-3 text-sm rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none transition-all"
@@ -280,9 +296,43 @@
                                   #{{ fb.deviceSlug }}
                                 </span>
                               }
-                              <span class="text-[10px] text-slate-600">{{ formatDate(fb.createdAt!) }}</span>
+                             <span class="text-[10px] text-slate-600">{{ formatDate(fb.createdAt!) }}</span>
                             </div>
+
+                            @if (fb.parentId && fb.parentMessage) {
+                              <div class="bg-white/5 border-l-4 border-indigo-500/30 p-2.5 rounded-r-lg mb-3">
+                                <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">{{ fb.parentIsAnonymous ? 'Anônimo' : 'Identificado' }}</p>
+                                <p class="text-xs text-slate-400 italic line-clamp-2">"{{ fb.parentMessage }}"</p>
+                              </div>
+                            }
+
                             <p class="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{{ fb.message }}</p>
+
+                            <!-- Actions Row (Like / Reply) -->
+                            <div class="flex items-center gap-4 mt-4 pt-3 border-t border-white/5">
+                              <button 
+                                (click)="toggleLike(fb)" 
+                                class="flex items-center gap-1.5 text-xs transition-colors cursor-pointer group/like"
+                                [class.text-indigo-400]="fb.likedByMe"
+                                [class.text-slate-500]="!fb.likedByMe"
+                                [class.hover:text-indigo-300]="!fb.likedByMe"
+                              >
+                                <svg class="w-4 h-4 transition-transform group-active/like:scale-125" [class.fill-current]="fb.likedByMe" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                <span>{{ fb.likesCount || 0 }}</span>
+                              </button>
+
+                              <button 
+                                (click)="setReply(fb)" 
+                                class="flex items-center gap-1.5 text-xs text-slate-500 hover:text-indigo-400 transition-colors cursor-pointer"
+                              >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                </svg>
+                                Responder
+                              </button>
+                            </div>
                           </div>
 
                           @if (fb.canEdit) {
