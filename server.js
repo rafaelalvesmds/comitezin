@@ -144,7 +144,10 @@ app.get('/api/auth/verify', (req, res) => {
 app.get('/api/people', async (_req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, created_at AS "createdAt" FROM people ORDER BY name'
+      `SELECT p.id, p.name, p.cargo, p.step, p.expects_promotion AS "expectsPromotion", p.promoted, p.squad, p.created_at AS "createdAt",
+              (SELECT COUNT(*)::int FROM feedback f WHERE f.person_id = p.id) AS "feedbackCount"
+       FROM people p
+       ORDER BY p.name`
     );
     res.json(rows);
   } catch (err) {

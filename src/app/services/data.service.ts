@@ -130,6 +130,7 @@ export class DataService {
 
   async sendFeedback(personId: string | null, message: string, isAnonymous: boolean, parentId?: string): Promise<void> {
     await this.http.post(`${environment.apiUrl}/feedback`, { personId, message, isAnonymous, parentId }, this.headers).toPromise();
+    await this.loadPeople();
   }
 
   async toggleLike(feedbackId: string): Promise<void> {
@@ -154,5 +155,6 @@ export class DataService {
 
   async deleteFeedback(id: string): Promise<void> {
     await this.http.delete(`${environment.apiUrl}/feedback/${id}`, this.headers).toPromise();
+    await this.loadPeople();
   }
 }

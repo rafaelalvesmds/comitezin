@@ -51,6 +51,7 @@ export interface Person {
   promoted: boolean;
   squad: string;
   createdAt: string;
+  feedbackCount?: number;
 }
 
 export interface PromotionRecord {
