@@ -21,6 +21,7 @@ export enum Cargo {
   ANALISTA_SISTEMAS = 'Analista de Sistemas',
   ANALISTA_NEGOCIO = 'Analista de Negócio',
   QA = 'QA',
+  UI_UX_DESIGN = 'UI/UX Design',
 }
 
 export const STEP_HIERARCHY: Step[] = [
@@ -84,8 +85,8 @@ export function getNextStep(current: Step, cargo: Cargo): Step | null {
   
   const next = STEP_HIERARCHY[index + 1];
   
-  // If Analista de Negócio or QA, they can't go beyond Senior III
-  if (cargo === Cargo.ANALISTA_NEGOCIO || cargo === Cargo.QA) {
+  // If Analista de Negócio, QA or UI/UX Design, they can't go beyond Senior III
+  if (cargo === Cargo.ANALISTA_NEGOCIO || cargo === Cargo.QA || cargo === Cargo.UI_UX_DESIGN) {
     if (next.startsWith('Especialista') || next.startsWith('Arquiteto')) {
       return null;
     }
