@@ -9,26 +9,28 @@
       >
         {{ person().name.charAt(0).toUpperCase() }}
       </div>
-      <div>
-        <h3 class="font-semibold text-white text-base leading-tight hover:text-indigo-400 transition-colors mb-1">{{ person().name }}</h3>
-        <div class="text-xs text-indigo-300/60 font-medium">{{ person().cargo }}</div>
-        <div class="flex items-center gap-2 mt-2.5">
-          <span
-            class="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm/10"
-            [class]="stepClass()"
-          >
-            {{ person().step }}
-          </span>
-          @if (person().squad) {
-            <span class="text-[10px] text-slate-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">{{ person().squad }}</span>
-          }
+      <div class="min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <h3 class="font-semibold text-white text-base leading-tight hover:text-indigo-400 transition-colors">{{ person().name }}</h3>
           @if ((person().feedbackCount ?? 0) > 0) {
-            <span class="text-[10px] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/10 flex items-center gap-1" title="Total de feedbacks">
+            <span class="text-[10px] text-indigo-400 font-medium flex items-center gap-1" title="Total de feedbacks">
               <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
               {{ person().feedbackCount }}
             </span>
+          }
+        </div>
+        <div class="text-xs text-indigo-300/60 font-medium">{{ person().cargo }}</div>
+        <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
+          <span
+            class="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm/10 whitespace-nowrap"
+            [class]="stepClass()"
+          >
+            {{ person().step }}
+          </span>
+          @if (person().squad) {
+            <span class="text-[10px] text-slate-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5 whitespace-nowrap">{{ person().squad }}</span>
           }
         </div>
       </div>
