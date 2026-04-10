@@ -6,18 +6,8 @@ import { CommitteeService } from '../../services/committee.service';
 import { AuthService } from '../../services/auth.service';
 import { RadarChart } from '../../components/radar-chart/radar-chart';
 import { ConfirmModal } from '../../components/confirm-modal/confirm-modal';
-import { Person, Competencies, PromotionRecord, Cargo, Step, STEP_HIERARCHY, Feedback } from '../../models/person.model';
+import { Person, Competencies, PromotionRecord, Cargo, Step, STEP_HIERARCHY, Feedback, STEP_COLORS } from '../../models/person.model';
 
-const STEP_COLORS: Record<string, string> = {
-  [Step.ESTAGIARIO]: 'bg-slate-900 text-slate-400',
-  [Step.JUNIOR_I]: 'bg-sky-950 text-sky-400',
-  [Step.JUNIOR_II]: 'bg-sky-900 text-sky-300',
-  [Step.PLENO_I]: 'bg-violet-950 text-violet-400',
-  [Step.PLENO_II]: 'bg-violet-900 text-violet-300',
-  [Step.PLENO_III]: 'bg-violet-800 text-violet-200',
-  [Step.SENIOR_I]: 'bg-amber-950 text-amber-400',
-  [Step.SENIOR_II]: 'bg-amber-900 text-amber-300',
-};
 
 @Component({
   selector: 'app-profile',
@@ -122,8 +112,9 @@ export class Profile implements OnInit {
   }
 
   stepClass(step: string): string {
-    return STEP_COLORS[step] ?? 'bg-slate-100 text-slate-700';
+    return STEP_COLORS[step] ?? 'bg-slate-900 text-slate-400';
   }
+
 
   getInitial(): string {
     return this.person()?.name.charAt(0).toUpperCase() ?? '?';

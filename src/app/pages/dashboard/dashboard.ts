@@ -43,6 +43,8 @@ export class Dashboard {
   filterStep = signal<string>('');
   filterSquad = signal<string>('');
   filterStatus = signal<string>('');
+  showFilterPopover = signal(false);
+
 
   // Remove person modal
   showRemoveModal = signal(false);
@@ -103,6 +105,25 @@ export class Dashboard {
 
     return list;
   });
+
+  readonly groupedPeople = computed(() => {
+    const list = this.filteredPeople();
+    const groups: { cargo: string; people: any[] }[] = [];
+    
+    // Get unique cargos present in the filtered list
+    this.cargos.forEach(cargo => {
+      const peopleInCargo = list.filter(p => p.cargo === cargo);
+      if (peopleInCargo.length > 0) {
+        groups.push({
+          cargo,
+          people: peopleInCargo
+        });
+      }
+    });
+    
+    return groups;
+  });
+
 
   readonly hasActiveFilters = computed(() => {
     return !!(this.searchQuery().trim() || this.filterCargo() || this.filterStep() || this.filterSquad() || this.filterStatus());
