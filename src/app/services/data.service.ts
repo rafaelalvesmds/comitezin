@@ -77,10 +77,15 @@ export class DataService {
   }
 
   async updateSquad(id: string, squad: string): Promise<void> {
-    await this.http.patch(this.apiUrl + '/' + id, { squad }, this.headers).toPromise();
-    await this.loadPeople();
+    await this.updatePerson(id, { squad });
     await this.loadSquads();
   }
+
+  async updatePerson(id: string, fields: Partial<Person>): Promise<void> {
+    await this.http.patch(this.apiUrl + '/' + id, fields, this.headers).toPromise();
+    await this.loadPeople();
+  }
+
 
   // ── Squads ──────────────────────────────────────────────
   async loadSquads(): Promise<void> {
