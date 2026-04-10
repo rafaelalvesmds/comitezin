@@ -88,6 +88,8 @@ async function initDb() {
     await pool.query(`ALTER TABLE feedback ADD COLUMN IF NOT EXISTS device_id VARCHAR(100)`);
     await pool.query(`ALTER TABLE feedback ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES feedback(id) ON DELETE SET NULL`);
     await pool.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS step VARCHAR(50)`);
+    await pool.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS badges TEXT[] DEFAULT '{}'`);
+
     
     const { rows: pendingMigration } = await pool.query(`SELECT id FROM people WHERE step IS NULL LIMIT 1`);
     if (pendingMigration.length > 0) {
@@ -144,8 +146,9 @@ app.get('/api/auth/verify', (req, res) => {
 app.get('/api/people', async (_req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT p.id, p.name, p.cargo, p.step, p.expects_promotion AS "expectsPromotion", p.promoted, p.squad, p.created_at AS "createdAt",
+      `SELECT p.id, p.name, p.cargo, p.step, p.expects_promotion AS "expectsPromotion", p.promoted, p.squad, p.badges, p.created_at AS "createdAt",
               (SELECT COUNT(*)::int FROM feedback f WHERE f.person_id = p.id) AS "feedbackCount"
+
        FROM people p
        ORDER BY p.name`
     );
@@ -165,9 +168,10 @@ app.post('/api/people', async (req, res) => {
   const deviceId = req.header('X-Device-Id');
   try {
     const { rows } = await pool.query(
-      'INSERT INTO people (name, cargo, step, squad) VALUES ($1, $2, $3, $4) RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, created_at AS "createdAt"',
-      [name, cargo, step, squad || '']
+      'INSERT INTO people (name, cargo, step, squad, badges) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, badges, created_at AS "createdAt"',
+      [name, cargo, step, squad || '', []]
     );
+
     res.status(201).json(rows[0]);
   } catch (err) {
     console.error(err);
@@ -188,7 +192,9 @@ app.patch('/api/people/:id', async (req, res) => {
     step: 'step',
     name: 'name',
     squad: 'squad',
+    badges: 'badges',
   };
+
 
   const setClauses = [];
   const values = [];
@@ -211,9 +217,10 @@ app.patch('/api/people/:id', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `UPDATE people SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, created_at AS "createdAt"`,
+      `UPDATE people SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, badges, created_at AS "createdAt"`,
       values
     );
+
 
     res.json(rows[0]);
   } catch (err) {

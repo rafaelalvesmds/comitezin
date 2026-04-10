@@ -1,7 +1,8 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Step, Cargo, Person, getNextStep, STEP_COLORS } from '../../models/person.model';
+import { Step, Cargo, Person, getNextStep, STEP_COLORS, BADGE_METADATA } from '../../models/person.model';
+
 
 
 @Component({
@@ -14,10 +15,12 @@ export class PersonCard {
   person = input.required<Person>();
   isCommitteeMonth = input(false);
   hideCargo = input(false);
+  badgeMetadata = BADGE_METADATA;
 
 
-  expectationChanged = output<boolean>();
+
   promotedChanged = output<{ promoted: boolean; notes: string }>();
+
   removeRequested = output<void>();
 
   showNotesInput = signal(false);
@@ -32,9 +35,11 @@ export class PersonCard {
 
   constructor(private router: Router) {}
 
-  openProfile() {
-    this.router.navigate(['/profile', this.person().id]);
+  openProfile(manageBadges = false) {
+    const extras = manageBadges ? { queryParams: { editBadges: 'true' } } : {};
+    this.router.navigate(['/profile', this.person().id], extras);
   }
+
 
   onPromoteToggle() {
     const p = this.person();

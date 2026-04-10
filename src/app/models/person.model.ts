@@ -61,6 +61,83 @@ export const STEP_COLORS: Record<string, string> = {
   [Step.ARQUITETO_JUNIOR]: 'bg-indigo-950 text-indigo-400',
   [Step.ARQUITETO_MIL]: 'bg-fuchsia-950 text-fuchsia-400 shadow-lg border border-fuchsia-500/30',
 };
+ 
+ export interface BadgeInfo {
+   id: string;
+   label: string;
+   image: string;
+   description: string;
+ }
+ 
+ export const BADGE_METADATA: Record<string, BadgeInfo> = {
+   'pet_parent': {
+     id: 'pet_parent',
+     label: 'Pai/Mãe de Pet',
+     image: 'badges/pet_parent.png',
+     description: 'Orgulhoso tutor de bichinhos'
+   },
+   'human_parent': {
+     id: 'human_parent',
+     label: 'Pai/Mãe de Humano',
+     image: 'badges/human_parent.png',
+     description: 'Dedicado à criação de pequenos humanos'
+   },
+   'cris_son': {
+     id: 'cris_son',
+     label: 'Filho do Cris',
+     image: 'badges/cris_son.png',
+     description: 'Herdeiro do legado do Cris'
+   },
+   'bonito': {
+     id: 'bonito',
+     label: 'Bonito',
+     image: 'badges/bonito.png',
+     description: 'Beleza que ofusca o código'
+   },
+   'frango_lover': {
+     id: 'frango_lover',
+     label: 'Frango Lover',
+     image: 'badges/frango_lover.png',
+     description: 'Apreciador oficial de franguinho'
+   },
+   'sabarense': {
+     id: 'sabarense',
+     label: 'Sabarense',
+     image: 'badges/sabarense.png',
+     description: 'Diretamente da terra da jabuticaba'
+   },
+   'indiano': {
+     id: 'indiano',
+     label: 'Indiano',
+     image: 'badges/indiano.png',
+     description: 'Namastê, o mestre da sabedoria'
+   },
+   'intestino_regulado': {
+     id: 'intestino_regulado',
+     label: 'Intestino Regulado',
+     image: 'badges/intestino_regulado.png',
+     description: 'Equilíbrio interno é tudo'
+   },
+   'bolota': {
+     id: 'bolota',
+     label: 'Bolota',
+     image: 'badges/bolota.png',
+     description: 'Fofura em formato esférico'
+   },
+   'vibe_codas': {
+     id: 'vibe_codas',
+     label: 'Vibe Codas',
+     image: 'badges/vibe_codas.png',
+     description: 'IA core: o terror do código manual'
+   },
+   'tem_estrela': {
+     id: 'tem_estrela',
+     label: 'Tem Estrela',
+     image: 'badges/tem_estrela.png',
+     description: 'O brilho que guia o sucesso'
+   }
+ };
+
 
 
 export interface Person {
@@ -73,7 +150,9 @@ export interface Person {
   squad: string;
   createdAt: string;
   feedbackCount?: number;
+  badges?: string[];
 }
+
 
 export interface PromotionRecord {
   id: string;

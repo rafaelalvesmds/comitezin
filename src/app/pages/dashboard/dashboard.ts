@@ -149,11 +149,8 @@ export class Dashboard {
     this.showAddForm.set(false);
   }
 
-  async onExpectationChange(id: string, expects: boolean): Promise<void> {
-    await this.dataService.updateExpectation(id, expects);
-  }
-
   async onPromotedChange(id: string, event: { promoted: boolean; notes: string }, currentStep: Step): Promise<void> {
+
     const person = this.people().find(p => p.id === id);
     if (!person) return;
     await this.dataService.markPromoted(id, event.promoted, currentStep, person.cargo, this.committeeMonthLabel, event.notes);

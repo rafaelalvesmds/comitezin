@@ -311,11 +311,10 @@
 
     <!-- Loading -->
     @if (loading()) {
-      <div class="text-center py-20">
-        <div
-          class="w-8 h-8 border-4 border-indigo-900 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"
-        ></div>
-        <p class="text-slate-500 text-sm">Carregando equipe...</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="h-48 skeleton opacity-20 border border-white/5 rounded-2xl"></div>
+        }
       </div>
     }
 
@@ -371,10 +370,10 @@
                     [person]="person"
                     [isCommitteeMonth]="committee.isCommitteeMonth"
                     [hideCargo]="true"
-                    (expectationChanged)="onExpectationChange(person.id, $event)"
                     (promotedChanged)="onPromotedChange(person.id, $event, person.step)"
                     (removeRequested)="onRemove(person.id)"
                   />
+
 
                 }
               </div>

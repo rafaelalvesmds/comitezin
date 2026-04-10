@@ -6,7 +6,8 @@ import { CommitteeService } from '../../services/committee.service';
 import { AuthService } from '../../services/auth.service';
 import { RadarChart } from '../../components/radar-chart/radar-chart';
 import { ConfirmModal } from '../../components/confirm-modal/confirm-modal';
-import { Person, Competencies, PromotionRecord, Cargo, Step, STEP_HIERARCHY, Feedback, STEP_COLORS } from '../../models/person.model';
+import { Person, Competencies, PromotionRecord, Cargo, Step, STEP_HIERARCHY, Feedback, STEP_COLORS, BADGE_METADATA } from '../../models/person.model';
+
 
 
 @Component({
@@ -29,6 +30,16 @@ export class Profile implements OnInit {
   editingSquad = signal(false);
   newSquad = signal('');
   savingCompetencies = signal(false);
+  isLoadingPage = signal(true);
+  isSavingBadges = signal(false);
+  
+  // Badges state
+  badgeMetadata = BADGE_METADATA;
+  badgesList = Object.values(BADGE_METADATA);
+  editingBadges = signal(false);
+  selectedBadges = signal<string[]>([]);
+  isAdmin = this.authService.isAuthenticated;
+
 
   // Competency form values
   formTecnico = signal(1);
@@ -75,6 +86,7 @@ export class Profile implements OnInit {
       this.feedbackMessage.set('');
 
       try {
+        this.isLoadingPage.set(true);
         await this.dataService.loadPeople();
         const found = this.dataService.people().find(p => p.id === id);
         if (!found) {
@@ -100,11 +112,27 @@ export class Profile implements OnInit {
         this.formImpacto.set(comp.impacto);
 
         await this.loadFeedbacks(id);
+        this.isLoadingPage.set(false);
+
+        // Check for editBadges query param
+        this.route.queryParamMap.subscribe(queryParams => {
+          if (queryParams.get('editBadges') === 'true' && this.isAdmin()) {
+            this.startEditBadges();
+            // Clear the query param so it doesn't reopen on refresh
+            this.router.navigate([], { 
+              relativeTo: this.route, 
+              queryParams: { editBadges: null }, 
+              queryParamsHandling: 'merge',
+              replaceUrl: true 
+            });
+          }
+        });
       } catch (err) {
         console.error('Erro ao inicializar perfil:', err);
       }
     });
   }
+
 
   async loadFeedbacks(personId: string) {
     const list = await this.dataService.getFeedbacks(personId);
@@ -170,6 +198,42 @@ export class Profile implements OnInit {
     this.person.set({ ...p, squad: this.newSquad() });
     this.editingSquad.set(false);
   }
+
+  async onExpectationChange(expectation: boolean) {
+    const p = this.person();
+    if (!p) return;
+    await this.dataService.updateExpectation(p.id, expectation);
+    this.person.set({ ...p, expectsPromotion: expectation });
+  }
+
+
+  startEditBadges() {
+    this.selectedBadges.set([...(this.person()?.badges || [])]);
+    this.editingBadges.set(true);
+  }
+
+  toggleBadge(badgeId: string) {
+    const current = this.selectedBadges();
+    if (current.includes(badgeId)) {
+      this.selectedBadges.set(current.filter(id => id !== badgeId));
+    } else {
+      this.selectedBadges.set([...current, badgeId]);
+    }
+  }
+
+  async saveBadges() {
+    const p = this.person();
+    if (!p) return;
+    this.isSavingBadges.set(true);
+    try {
+      await this.dataService.updatePerson(p.id, { badges: this.selectedBadges() });
+      this.person.set({ ...p, badges: this.selectedBadges() });
+      this.editingBadges.set(false);
+    } finally {
+      this.isSavingBadges.set(false);
+    }
+  }
+
 
   goBack() {
     this.router.navigate(['/dashboard']);

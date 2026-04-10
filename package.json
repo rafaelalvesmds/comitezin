@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "node server.js",
-    "dev": "ng serve",
-    "dev:all": "node server.js & (until curl -s http://127.0.0.1:3000 > /dev/null; do sleep 1; done && ng serve)",
+    "start": "concurrently -n \"Server,Client\" -c \"magenta,cyan\" \"node server.js\" \"ng serve\"",
+    "dev": "concurrently -n \"Server,Client\" -c \"magenta,cyan\" \"node server.js\" \"ng serve\"",
+    "server": "node server.js",
+    "client": "ng serve",
     "build": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
@@ -48,6 +49,7 @@
     "@angular/cli": "^21.0.5",
     "@angular/compiler-cli": "^21.0.0",
     "@tailwindcss/postcss": "^4.1.12",
+    "concurrently": "^9.2.1",
     "jsdom": "^27.1.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.12",
