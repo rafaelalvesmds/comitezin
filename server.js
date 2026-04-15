@@ -9,11 +9,17 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Database ────────────────────────────────────────────────
+const dbUrl = process.env.DATABASE_URL || '';
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  connectionString: dbUrl,
+  ssl: dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1') ? false : { rejectUnauthorized: false },
 });
+
+if (dbUrl) {
+  const host = dbUrl.split('@')[1]?.split('/')[0] || 'localhost';
+  console.log(`[DB] Conectado ao banco: ${host}`);
+}
 
 async function initDb() {
   try {
@@ -56,6 +62,7 @@ async function initDb() {
         lideranca INTEGER DEFAULT 1 CHECK (lideranca BETWEEN 1 AND 5),
         autonomia INTEGER DEFAULT 1 CHECK (autonomia BETWEEN 1 AND 5),
         impacto INTEGER DEFAULT 1 CHECK (impacto BETWEEN 1 AND 5),
+        humildade INTEGER DEFAULT 1 CHECK (humildade BETWEEN 1 AND 5),
         updated_at TIMESTAMP DEFAULT NOW(),
         UNIQUE(person_id)
       );
@@ -89,8 +96,9 @@ async function initDb() {
     await pool.query(`ALTER TABLE feedback ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES feedback(id) ON DELETE SET NULL`);
     await pool.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS step VARCHAR(50)`);
     await pool.query(`ALTER TABLE people ADD COLUMN IF NOT EXISTS badges TEXT[] DEFAULT '{}'`);
+    await pool.query(`ALTER TABLE competencies ADD COLUMN IF NOT EXISTS humildade INTEGER DEFAULT 1 CHECK (humildade BETWEEN 1 AND 5)`);
 
-    
+
     const { rows: pendingMigration } = await pool.query(`SELECT id FROM people WHERE step IS NULL LIMIT 1`);
     if (pendingMigration.length > 0) {
       console.log('Migrating people data: cargo -> step');
@@ -314,11 +322,11 @@ app.get('/api/competencies/:personId', async (req, res) => {
   const { personId } = req.params;
   try {
     const { rows } = await pool.query(
-      'SELECT person_id AS "personId", tecnico, comunicacao, lideranca, autonomia, impacto, updated_at AS "updatedAt" FROM competencies WHERE person_id = $1',
+      'SELECT person_id AS "personId", tecnico, comunicacao, lideranca, autonomia, impacto, humildade, updated_at AS "updatedAt" FROM competencies WHERE person_id = $1',
       [personId]
     );
     if (rows.length === 0) {
-      return res.json({ personId, tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1 });
+      return res.json({ personId, tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1, humildade: 1 });
     }
     res.json(rows[0]);
   } catch (err) {
@@ -330,10 +338,10 @@ app.get('/api/competencies/:personId', async (req, res) => {
 // PUT upsert competencies
 app.put('/api/competencies/:personId', async (req, res) => {
   const { personId } = req.params;
-  const { tecnico, comunicacao, lideranca, autonomia, impacto } = req.body;
+  const { tecnico, comunicacao, lideranca, autonomia, impacto, humildade } = req.body;
 
   // Validate range
-  const fields = [tecnico, comunicacao, lideranca, autonomia, impacto];
+  const fields = [tecnico, comunicacao, lideranca, autonomia, impacto, humildade];
   if (fields.some(f => f < 1 || f > 5)) {
     return res.status(400).json({ error: 'Valores devem estar entre 1 e 5' });
   }
@@ -341,12 +349,12 @@ app.put('/api/competencies/:personId', async (req, res) => {
   const deviceId = req.header('X-Device-Id');
   try {
     const { rows } = await pool.query(
-      `INSERT INTO competencies (person_id, tecnico, comunicacao, lideranca, autonomia, impacto, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      `INSERT INTO competencies (person_id, tecnico, comunicacao, lideranca, autonomia, impacto, humildade, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
        ON CONFLICT (person_id) DO UPDATE SET
-         tecnico = $2, comunicacao = $3, lideranca = $4, autonomia = $5, impacto = $6, updated_at = NOW()
-       RETURNING person_id AS "personId", tecnico, comunicacao, lideranca, autonomia, impacto, updated_at AS "updatedAt"`,
-      [personId, tecnico, comunicacao, lideranca, autonomia, impacto]
+         tecnico = $2, comunicacao = $3, lideranca = $4, autonomia = $5, impacto = $6, humildade = $7, updated_at = NOW()
+       RETURNING person_id AS "personId", tecnico, comunicacao, lideranca, autonomia, impacto, humildade, updated_at AS "updatedAt"`,
+      [personId, tecnico, comunicacao, lideranca, autonomia, impacto, humildade]
     );
 
     res.json(rows[0]);
@@ -367,7 +375,7 @@ const normalizeIP = (ip) => {
 app.get('/api/feedback/:personId', async (req, res) => {
   const { personId } = req.params;
   const clientDeviceId = req.header('X-Device-Id');
-  
+
   try {
     const { rows } = await pool.query(
       `SELECT f.id, f.person_id AS "personId", f.message, f.is_anonymous AS "isAnonymous", 
@@ -386,7 +394,7 @@ app.get('/api/feedback/:personId', async (req, res) => {
     const feedbacks = rows.map(fb => {
       const isAuthor = fb.deviceId === clientDeviceId;
       const isAnonymous = !!fb.isAnonymous;
-      
+
       return {
         ...fb,
         canEdit: isAuthor,
@@ -445,7 +453,7 @@ app.post('/api/feedback/:id/like', async (req, res) => {
 app.post('/api/feedback', async (req, res) => {
   const { personId, message, isAnonymous, parentId } = req.body;
   const deviceId = req.header('X-Device-Id');
-  
+
   if (!message) {
     return res.status(400).json({ error: 'Mensagem de feedback é obrigatória' });
   }
@@ -489,7 +497,7 @@ app.patch('/api/feedback/:id', async (req, res) => {
     }
 
     await pool.query('UPDATE feedback SET message = $1 WHERE id = $2', [message, id]);
-    
+
     res.json({ success: true });
   } catch (err) {
     console.error('Erro ao editar feedback:', err.message);
@@ -512,7 +520,7 @@ app.delete('/api/feedback/:id', async (req, res) => {
     }
 
     await pool.query('DELETE FROM feedback WHERE id = $1', [id]);
-    
+
     res.status(204).end();
   } catch (err) {
     console.error('Erro ao remover feedback:', err.message);

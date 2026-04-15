@@ -122,10 +122,10 @@ export class DataService {
   async getCompetencies(personId: string): Promise<Competencies> {
     try {
       const result = await this.http.get<Competencies>(`${environment.apiUrl}/competencies/${personId}`, this.headers).toPromise();
-      return result ?? { personId, tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1 };
+      return result ?? { personId, tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1, humildade: 1 };
     } catch (err) {
       console.error('Erro ao carregar competências', err);
-      return { personId, tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1 };
+      return { personId, tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1, humildade: 1 };
     }
   }
 
