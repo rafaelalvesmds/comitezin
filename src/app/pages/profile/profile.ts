@@ -24,7 +24,7 @@ export class Profile implements OnInit {
   private authService = inject(AuthService);
 
   person = signal<Person | null>(null);
-  competencies = signal<Competencies>({ personId: '', tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1 });
+  competencies = signal<Competencies>({ personId: '', tecnico: 1, comunicacao: 1, lideranca: 1, autonomia: 1, impacto: 1, humildade: 1 });
   promotionHistory = signal<PromotionRecord[]>([]);
   editingCompetencies = signal(false);
   editingSquad = signal(false);
@@ -47,6 +47,7 @@ export class Profile implements OnInit {
   formLideranca = signal(1);
   formAutonomia = signal(1);
   formImpacto = signal(1);
+  formHumildade = signal(1);
 
   // Feedback form
   feedbacks = signal<Feedback[]>([]);
@@ -110,6 +111,7 @@ export class Profile implements OnInit {
         this.formLideranca.set(comp.lideranca);
         this.formAutonomia.set(comp.autonomia);
         this.formImpacto.set(comp.impacto);
+        this.formHumildade.set(comp.humildade || 1);
 
         await this.loadFeedbacks(id);
         this.isLoadingPage.set(false);
@@ -170,6 +172,7 @@ export class Profile implements OnInit {
     this.formLideranca.set(c.lideranca);
     this.formAutonomia.set(c.autonomia);
     this.formImpacto.set(c.impacto);
+    this.formHumildade.set(c.humildade || 1);
     this.editingCompetencies.set(true);
   }
 
@@ -184,6 +187,7 @@ export class Profile implements OnInit {
       lideranca: this.formLideranca(),
       autonomia: this.formAutonomia(),
       impacto: this.formImpacto(),
+      humildade: this.formHumildade(),
     };
     await this.dataService.saveCompetencies(p.id, newComp);
     this.competencies.set(newComp);

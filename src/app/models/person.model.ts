@@ -130,13 +130,31 @@ export const STEP_COLORS: Record<string, string> = {
      image: 'badges/vibe_codas.png',
      description: 'IA core: o terror do código manual'
    },
-   'tem_estrela': {
-     id: 'tem_estrela',
-     label: 'Tem Estrela',
-     image: 'badges/tem_estrela.png',
-     description: 'O brilho que guia o sucesso'
-   }
- };
+    'tem_estrela': {
+      id: 'tem_estrela',
+      label: 'Tem Estrela',
+      image: 'badges/tem_estrela.png',
+      description: 'O brilho que guia o sucesso'
+    },
+    'jogador_caro': {
+      id: 'jogador_caro',
+      label: 'Jogador Caro',
+      image: 'badges/jogador_caro.png',
+      description: 'O craque do time'
+    },
+    'tdah': {
+      id: 'tdah',
+      label: 'TDAH',
+      image: 'badges/tdah.png',
+      description: 'Foco seletivo e criatividade a mil'
+    },
+    'papagaense': {
+      id: 'papagaense',
+      label: 'Papagaense',
+      image: 'badges/papagaense.png',
+      description: 'Orgulho da terra mineira'
+    }
+  };
 
 
 
@@ -173,6 +191,7 @@ export interface Competencies {
   lideranca: number;
   autonomia: number;
   impacto: number;
+  humildade: number;
   updatedAt?: string;
 }
 
