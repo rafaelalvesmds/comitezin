@@ -22,12 +22,15 @@ export class Dashboard {
   
   readonly availableSteps = computed(() => {
     const cargo = this.newCargo();
+    let steps = [...STEP_HIERARCHY];
+
     if (cargo === Cargo.ANALISTA_NEGOCIO || cargo === Cargo.QA || cargo === Cargo.UI_UX_DESIGN) {
-      return STEP_HIERARCHY.filter(s => 
+      steps = steps.filter(s => 
         !s.startsWith('Especialista') && !s.startsWith('Arquiteto')
       );
     }
-    return STEP_HIERARCHY;
+    
+    return [Step.EX_KEEVER, ...steps];
   });
 
   showAddForm = signal(false);

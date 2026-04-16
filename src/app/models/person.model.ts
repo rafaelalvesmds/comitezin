@@ -15,6 +15,7 @@ export enum Step {
   ESPECIALISTA_IIIII = 'Especialista de Software IIIII',
   ARQUITETO_JUNIOR = 'Arquiteto Junior',
   ARQUITETO_MIL = 'Arquiteto Especialista MIL',
+  EX_KEEVER = 'Ex-keever',
 }
 
 export enum Cargo {
@@ -60,6 +61,7 @@ export const STEP_COLORS: Record<string, string> = {
   [Step.ESPECIALISTA_IIIII]: 'bg-emerald-600 text-emerald-50',
   [Step.ARQUITETO_JUNIOR]: 'bg-indigo-950 text-indigo-400',
   [Step.ARQUITETO_MIL]: 'bg-fuchsia-950 text-fuchsia-400 shadow-lg border border-fuchsia-500/30',
+  [Step.EX_KEEVER]: 'bg-slate-800 text-slate-300',
 };
  
  export interface BadgeInfo {
