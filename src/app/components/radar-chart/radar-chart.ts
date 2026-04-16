@@ -31,9 +31,9 @@ export class RadarChart implements OnDestroy {
     this.chart = new Chart(canvas, {
       type: 'radar',
       data: {
-        labels: ['Técnico', 'Comunicação', 'Liderança', 'Autonomia', 'Impacto'],
+        labels: ['Técnico', 'Comunicação', 'Liderança', 'Autonomia', 'Impacto', 'Humildade'],
         datasets: [{
-          data: [comp.tecnico, comp.comunicacao, comp.lideranca, comp.autonomia, comp.impacto],
+          data: [comp.tecnico, comp.comunicacao, comp.lideranca, comp.autonomia, comp.impacto, comp.humildade],
           backgroundColor: 'rgba(129, 140, 248, 0.2)',
           borderColor: '#818cf8',
           borderWidth: 2,
