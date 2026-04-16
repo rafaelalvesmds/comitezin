@@ -1,23 +1,23 @@
 @if (!isCommitteeMonth()) {
-  <div class="flex items-center gap-3">
-    <div class="text-center bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[3.5rem]">
-      <p class="text-xl font-bold text-white tabular-nums">{{ days() }}</p>
-      <p class="text-[10px] text-indigo-200 uppercase tracking-wider">Dias</p>
-    </div>
-    <span class="text-white/40 text-xl font-light">:</span>
-    <div class="text-center bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[3.5rem]">
-      <p class="text-xl font-bold text-white tabular-nums">{{ hours().toString().padStart(2, '0') }}</p>
-      <p class="text-[10px] text-indigo-200 uppercase tracking-wider">Horas</p>
-    </div>
-    <span class="text-white/40 text-xl font-light">:</span>
-    <div class="text-center bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[3.5rem]">
-      <p class="text-xl font-bold text-white tabular-nums">{{ minutes().toString().padStart(2, '0') }}</p>
-      <p class="text-[10px] text-indigo-200 uppercase tracking-wider">Min</p>
-    </div>
-    <span class="text-white/40 text-xl font-light">:</span>
-    <div class="text-center bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[3.5rem]">
-      <p class="text-xl font-bold text-white tabular-nums animate-pulse">{{ seconds().toString().padStart(2, '0') }}</p>
-      <p class="text-[10px] text-indigo-200 uppercase tracking-wider">Seg</p>
-    </div>
+<div class="flex items-center gap-3">
+  <div class="text-center bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[3.5rem]">
+    <p class="text-xl font-bold text-white tabular-nums">{{ days() }}</p>
+    <p class="text-[10px] text-indigo-200 uppercase tracking-wider">Dias</p>
   </div>
+  <span class="text-white/40 text-xl font-light">:</span>
+  <div class="text-center bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[3.5rem]">
+    <p class="text-xl font-bold text-white tabular-nums">{{ hours().toString().padStart(2, '0') }}</p>
+    <p class="text-[10px] text-indigo-200 uppercase tracking-wider">Horas</p>
+  </div>
+  <span class="text-white/40 text-xl font-light">:</span>
+  <div class="text-center bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[3.5rem]">
+    <p class="text-xl font-bold text-white tabular-nums">{{ minutes().toString().padStart(2, '0') }}</p>
+    <p class="text-[10px] text-indigo-200 uppercase tracking-wider">Min</p>
+  </div>
+  <span class="text-white/40 text-xl font-light">:</span>
+  <div class="text-center bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 min-w-[3.5rem]">
+    <p class="text-xl font-bold text-white tabular-nums animate-pulse">{{ seconds().toString().padStart(2, '0') }}</p>
+    <p class="text-[10px] text-indigo-200 uppercase tracking-wider">Seg</p>
+  </div>
+</div>
 }
