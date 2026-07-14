@@ -91,6 +91,20 @@ async function initDb() {
       );
     `);
 
+    // 7. Create activity_log table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS activity_log (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        person_id UUID REFERENCES people(id) ON DELETE SET NULL,
+        person_name VARCHAR(255) NOT NULL,
+        action VARCHAR(50) NOT NULL,
+        details TEXT DEFAULT '',
+        created_at TIMESTAMP DEFAULT NOW(),
+        ip_address VARCHAR(45),
+        device_id VARCHAR(100)
+      );
+    `);
+
     // Migration logic
     await pool.query(`ALTER TABLE feedback ADD COLUMN IF NOT EXISTS device_id VARCHAR(100)`);
     await pool.query(`ALTER TABLE feedback ADD COLUMN IF NOT EXISTS parent_id UUID REFERENCES feedback(id) ON DELETE SET NULL`);
