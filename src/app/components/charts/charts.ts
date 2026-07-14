@@ -1,7 +1,7 @@
-import { Component, computed, inject, OnInit, OnDestroy, ElementRef, viewChild, effect } from '@angular/core';
+import { Component, computed, inject, OnDestroy, ElementRef, viewChild, effect, input } from '@angular/core';
 import { Chart, registerables } from 'chart.js';
 import { DataService } from '../../services/data.service';
-import { STEP_HIERARCHY } from '../../models/person.model';
+import { STEP_HIERARCHY, Person } from '../../models/person.model';
 
 Chart.register(...registerables);
 
@@ -13,6 +13,8 @@ Chart.register(...registerables);
 export class Charts implements OnDestroy {
   private dataService = inject(DataService);
 
+  people = input<Person[]>([]);
+
   private doughnutChart: Chart | null = null;
   private barChart: Chart | null = null;
 
@@ -20,7 +22,7 @@ export class Charts implements OnDestroy {
   barCanvas = viewChild<ElementRef<HTMLCanvasElement>>('barCanvas');
 
   readonly stepDistribution = computed(() => {
-    const people = this.dataService.people();
+    const people = this.people();
     const dist: Record<string, number> = {};
     for (const step of STEP_HIERARCHY) {
       dist[step] = 0;
@@ -32,7 +34,7 @@ export class Charts implements OnDestroy {
   });
 
   readonly expectationVsPromoted = computed(() => {
-    const people = this.dataService.people();
+    const people = this.people();
     return {
       expecting: people.filter(p => p.expectsPromotion).length,
       promoted: people.filter(p => p.promoted).length,

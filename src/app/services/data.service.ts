@@ -11,6 +11,7 @@ export class DataService {
   private apiUrl = `${environment.apiUrl}/people`;
 
   readonly people = signal<Person[]>([]);
+  readonly promotions = signal<PromotionRecord[]>([]);
   readonly loading = signal(true);
   readonly squads = signal<string[]>([]);
 
@@ -34,10 +35,20 @@ export class DataService {
     try {
       const list = await this.http.get<Person[]>(this.apiUrl, this.headers).toPromise();
       this.people.set(list ?? []);
+      await this.loadPromotions();
     } catch (err) {
       console.error('Erro ao carregar pessoas', err);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async loadPromotions(): Promise<void> {
+    try {
+      const list = await this.getAllPromotions();
+      this.promotions.set(list ?? []);
+    } catch (err) {
+      console.error('Erro ao carregar promoções', err);
     }
   }
 
@@ -66,7 +77,12 @@ export class DataService {
         }, this.headers).toPromise();
       }
     } else {
-      await this.http.patch(this.apiUrl + '/' + id, { promoted: false }, this.headers).toPromise();
+      const history = await this.getPromotionHistory(id);
+      const record = history.find(h => h.committeeMonth === committeeMonth);
+      const restoredStep = record ? record.fromStep as Step : currentStep;
+
+      await this.http.patch(this.apiUrl + '/' + id, { promoted: false, step: restoredStep }, this.headers).toPromise();
+      await this.http.delete(`${environment.apiUrl}/promotions?personId=${id}&committeeMonth=${encodeURIComponent(committeeMonth)}`, this.headers).toPromise();
     }
     await this.loadPeople();
   }

@@ -171,6 +171,7 @@ export interface Person {
   createdAt: string;
   feedbackCount?: number;
   badges?: string[];
+  promotionNotes?: string;
 }
 
 

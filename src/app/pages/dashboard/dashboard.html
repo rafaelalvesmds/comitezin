@@ -21,38 +21,98 @@
 
   <main class="max-w-6xl mx-auto px-6 py-8">
     <!-- Committee Banner with Countdown -->
+    <!-- Committee Banner with Timeline Navigation -->
     <div
-      class="rounded-2xl p-6 mb-8 bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-lg shadow-indigo-500/20">
+      [class]="isUpcomingSelected() ? 'rounded-2xl p-6 mb-8 bg-gradient-to-r from-indigo-600 to-purple-700 text-white shadow-lg shadow-indigo-500/20 transition-all duration-300' : 'rounded-2xl p-6 mb-8 bg-gradient-to-r from-slate-800 to-slate-900 text-white border border-white/5 shadow-lg shadow-black/40 transition-all duration-300'">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div>
-          <p class="text-indigo-200 text-sm font-medium uppercase tracking-wider mb-1">
-            Proximo Comite
-          </p>
-          <h2 class="text-2xl sm:text-3xl font-bold">
-            {{ committee.monthName }} de {{ committee.year }}
-          </h2>
-          @if (committee.isCommitteeMonth) {
-            <span
-              class="inline-flex items-center gap-1.5 mt-2 text-sm bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full"
-            >
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Mes do comite - votacao habilitada
-            </span>
-          }
-          <app-countdown class="mt-3" />
+        <div class="flex items-center gap-4">
+          <!-- Left Navigation Button -->
+          <button 
+            (click)="selectPreviousCommittee()" 
+            [disabled]="committeesList().indexOf(selectedCommitteeLabel()) === 0"
+            class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/10 disabled:cursor-not-allowed transition-colors text-white cursor-pointer"
+            title="Comitê anterior"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <!-- Committee Month Title + Dropdown -->
+          <div class="min-w-[200px]">
+            <p class="text-[10px] font-bold uppercase tracking-wider mb-1" [class]="isUpcomingSelected() ? 'text-indigo-200' : 'text-slate-400'">
+              {{ isUpcomingSelected() ? 'Próximo Comitê' : 'Histórico de Comitê' }}
+            </p>
+            <div class="flex items-center gap-2">
+              <h2 class="text-2xl sm:text-3xl font-bold select-none">
+                {{ selectedCommitteeLabel() }}
+              </h2>
+              
+              <!-- Direct selector dropdown -->
+              <div class="relative inline-block text-left">
+                <select 
+                  [ngModel]="selectedCommitteeLabel()" 
+                  (ngModelChange)="selectedCommitteeLabel.set($event)"
+                  class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  title="Selecionar outro comitê"
+                >
+                  @for (c of committeesList(); track c) {
+                    <option [value]="c" class="bg-[#12121a] text-white">{{ c }}</option>
+                  }
+                </select>
+                <div class="p-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors pointer-events-none text-white flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            @if (isUpcomingSelected()) {
+              @if (committee.isCommitteeMonth) {
+                <span
+                  class="inline-flex items-center gap-1.5 mt-2 text-xs bg-white/15 backdrop-blur-sm px-2.5 py-0.5 rounded-full"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Mês do comitê - votação habilitada
+                </span>
+              }
+              <app-countdown class="mt-3 block" />
+            } @else {
+              <span class="inline-flex items-center gap-1.5 mt-2 text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full">
+                Visualizando dados históricos
+              </span>
+            }
+          </div>
+
+          <!-- Right Navigation Button -->
+          <button 
+            (click)="selectNextCommittee()" 
+            [disabled]="committeesList().indexOf(selectedCommitteeLabel()) === committeesList().length - 1"
+            class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/10 disabled:cursor-not-allowed transition-colors text-white cursor-pointer"
+            title="Próximo comitê"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
+
+        <!-- Stats Grid -->
         <div class="flex gap-4 text-center">
-          <div class="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3">
+          <div class="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 min-w-[90px]">
             <p class="text-2xl font-bold">{{ stats().total }}</p>
-            <p class="text-xs text-indigo-200">Pessoas</p>
+            <p class="text-xs" [class]="isUpcomingSelected() ? 'text-indigo-200' : 'text-slate-400'">Pessoas</p>
           </div>
-          <div class="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3">
-            <p class="text-2xl font-bold">{{ stats().expecting }}</p>
-            <p class="text-xs text-indigo-200">Expectativas</p>
-          </div>
-          <div class="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3">
+          @if (isUpcomingSelected()) {
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 min-w-[90px]">
+              <p class="text-2xl font-bold">{{ stats().expecting }}</p>
+              <p class="text-xs text-indigo-200">Expectativas</p>
+            </div>
+          }
+          <div class="bg-white/10 backdrop-blur-sm rounded-xl px-5 py-3 min-w-[90px]">
             <p class="text-2xl font-bold">{{ stats().promoted }}</p>
-            <p class="text-xs text-indigo-200">Promovidos</p>
+            <p class="text-xs" [class]="isUpcomingSelected() ? 'text-indigo-200' : 'text-slate-400'">Promovidos</p>
           </div>
         </div>
       </div>
@@ -82,7 +142,7 @@
 
     @if (showCharts()) {
     <div class="mb-8">
-      <app-charts />
+      <app-charts [people]="peopleForSelectedCommittee()" />
     </div>
     }
 
@@ -302,7 +362,7 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           @for (person of group.people; track person.id) {
-          <app-person-card [person]="person" [isCommitteeMonth]="true" [hideCargo]="true"
+          <app-person-card [person]="person" [isCommitteeMonth]="isUpcomingSelected()" [hideCargo]="true"
             (promotedChanged)="onPromotedChange(person.id, $event, person.step)"
             (removeRequested)="onRemove(person.id)" />
 
