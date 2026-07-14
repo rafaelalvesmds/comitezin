@@ -58,8 +58,27 @@ export class DataService {
     await this.loadSquads();
   }
 
-  async updateExpectation(id: string, expects: boolean): Promise<void> {
-    await this.http.patch(this.apiUrl + '/' + id, { expectsPromotion: expects }, this.headers).toPromise();
+  async updateExpectation(id: string, expects: boolean, committeeMonth: string = ''): Promise<void> {
+    const person = this.people().find(p => p.id === id);
+    if (!person) return;
+
+    let months = person.expectsPromotionMonths || [];
+    if (committeeMonth) {
+      const clean = (m: string) => m.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+      const target = clean(committeeMonth);
+      if (expects) {
+        if (!months.map(clean).includes(target)) {
+          months = [...months, committeeMonth];
+        }
+      } else {
+        months = months.filter(m => clean(m) !== target);
+      }
+    }
+
+    await this.http.patch(this.apiUrl + '/' + id, { 
+      expectsPromotion: expects,
+      expectsPromotionMonths: months
+    }, this.headers).toPromise();
     await this.loadPeople();
   }
 

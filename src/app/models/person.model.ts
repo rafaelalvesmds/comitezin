@@ -172,6 +172,7 @@ export interface Person {
   feedbackCount?: number;
   badges?: string[];
   promotionNotes?: string;
+  expectsPromotionMonths?: string[];
 }
 
 
