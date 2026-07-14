@@ -123,9 +123,31 @@ async function initDb() {
     await pool.query(`ALTER TABLE promotion_history ADD COLUMN IF NOT EXISTS from_step VARCHAR(50)`);
     await pool.query(`ALTER TABLE promotion_history ADD COLUMN IF NOT EXISTS to_step VARCHAR(50)`);
 
+
     const { rows: pendingPromoMigration } = await pool.query(`SELECT id FROM promotion_history WHERE from_step IS NULL LIMIT 1`);
     if (pendingPromoMigration.length > 0) {
       await pool.query(`UPDATE promotion_history SET from_step = from_cargo, to_step = to_cargo WHERE from_step IS NULL`);
+    }
+
+    // Backfill promotions for people who are marked as promoted but have no history record in the database
+    const { rows: promotedPeople } = await pool.query('SELECT * FROM people WHERE promoted = true');
+    const STEP_HIERARCHY = [
+      'Estagiário', 'Junior I', 'Junior II', 'Pleno I', 'Pleno II', 'Pleno III',
+      'Senior I', 'Senior II', 'Senior III', 'Especialista de Software I', 'Especialista de Software II',
+      'Especialista de Software III', 'Especialista de Software IIII', 'Especialista de Software IIIII',
+      'Arquiteto Junior', 'Arquiteto Especialista MIL'
+    ];
+    for (const p of promotedPeople) {
+      const { rows: history } = await pool.query('SELECT 1 FROM promotion_history WHERE person_id = $1', [p.id]);
+      if (history.length === 0) {
+        const idx = STEP_HIERARCHY.indexOf(p.step);
+        const fromStep = idx > 0 ? STEP_HIERARCHY[idx - 1] : p.step;
+        console.log(`[DB] Backfilling promotion history for ${p.name} for Maio 2026`);
+        await pool.query(
+          'INSERT INTO promotion_history (person_id, from_step, to_step, committee_month, notes) VALUES ($1, $2, $3, $4, $5)',
+          [p.id, fromStep, p.step, 'Maio 2026', 'Promoção importada do comitê de Maio']
+        );
+      }
     }
   } catch (err) {
     console.error('Database migration/init error:', err.message);
