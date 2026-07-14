@@ -76,7 +76,16 @@ export class Dashboard {
       .filter(p => !!p);
 
     const nextCommitteeLabel = cleanLabel(this.committeeMonthLabel);
-    const all = Array.from(new Set([...pastCommittees, nextCommitteeLabel]));
+    
+    // Seed default committee months for the current year (2026)
+    const currentYear = new Date().getFullYear();
+    const defaultCommittees = [
+      `Fevereiro ${currentYear}`,
+      `Maio ${currentYear}`,
+      `Setembro ${currentYear}`
+    ].map(cleanLabel);
+
+    const all = Array.from(new Set([...pastCommittees, nextCommitteeLabel, ...defaultCommittees]));
     
     const monthIndexes: Record<string, number> = {
       'Janeiro': 1, 'Fevereiro': 2, 'Março': 3, 'Abril': 4, 'Maio': 5, 'Junho': 6,
