@@ -26,6 +26,15 @@ export class PersonCard {
   showNotesInput = signal(false);
   promotionNotes = signal('');
 
+  // Estado otimista para atualizar a UI imediatamente após confirmar promoção
+  private optimisticPromoted = signal<boolean | null>(null);
+
+  protected isPromoted = computed(() => {
+    const optimistic = this.optimisticPromoted();
+    if (optimistic !== null) return optimistic;
+    return this.person().promoted;
+  });
+
   protected stepClass = computed(() => STEP_COLORS[this.person().step] ?? 'bg-slate-100 text-slate-700');
   
   protected canBePromoted = computed(() => {
@@ -42,17 +51,18 @@ export class PersonCard {
 
 
   onPromoteToggle() {
-    const p = this.person();
-    if (!p.promoted) {
+    if (!this.isPromoted()) {
       // About to promote — show notes input
       this.showNotesInput.set(true);
     } else {
       // Un-promote
+      this.optimisticPromoted.set(false);
       this.promotedChanged.emit({ promoted: false, notes: '' });
     }
   }
 
   confirmPromotion() {
+    this.optimisticPromoted.set(true);
     this.promotedChanged.emit({ promoted: true, notes: this.promotionNotes() });
     this.showNotesInput.set(false);
     this.promotionNotes.set('');

@@ -62,7 +62,37 @@ export class Dashboard {
   readonly committee = this.committeeService.getNextCommittee();
   readonly committeeMonthLabel = `${this.committee.monthName} ${this.committee.year}`;
 
+  // Seletor de comitê
+  selectedCommitteeLabel = signal<string>('');
+
+  readonly committeesList = computed(() => {
+    // 1. Pega comitês únicos a partir do histórico de promoções
+    const pastCommittees = Array.from(new Set(this.dataService.promotions().map(p => p.committeeMonth)));
+    // 2. Adiciona o próximo comitê futuro
+    const nextCommitteeLabel = this.committeeMonthLabel;
+    const all = Array.from(new Set([...pastCommittees, nextCommitteeLabel]));
+    
+    const monthIndexes: Record<string, number> = {
+      'Janeiro': 1, 'Fevereiro': 2, 'Março': 3, 'Abril': 4, 'Maio': 5, 'Junho': 6,
+      'Julho': 7, 'Agosto': 8, 'Setembro': 9, 'Outubro': 10, 'Novembro': 11, 'Dezembro': 12
+    };
+    
+    return all.sort((a, b) => {
+      const [mA, yA] = a.split(' ');
+      const [mB, yB] = b.split(' ');
+      const valA = (parseInt(yA, 10) || 2026) * 12 + (monthIndexes[mA] || 1);
+      const valB = (parseInt(yB, 10) || 2026) * 12 + (monthIndexes[mB] || 1);
+      return valA - valB;
+    });
+  });
+
+  readonly isUpcomingSelected = computed(() => {
+    return this.selectedCommitteeLabel() === this.committeeMonthLabel;
+  });
+
   constructor() {
+    this.selectedCommitteeLabel.set(this.committeeMonthLabel);
+
     effect(() => {
       const cargo = this.newCargo();
       const currentStep = this.newStep();
@@ -78,8 +108,35 @@ export class Dashboard {
   readonly loading = computed(() => this.dataService.loading());
   readonly squads = computed(() => this.dataService.squads());
 
+  // Mapeia as pessoas com o status de promoção histórico baseado no comitê selecionado
+  readonly peopleForSelectedCommittee = computed(() => {
+    const rawPeople = this.people();
+    const allPromotions = this.dataService.promotions();
+    const selected = this.selectedCommitteeLabel();
+    const isUp = this.isUpcomingSelected();
+    
+    return rawPeople.map(p => {
+      const promo = allPromotions.find(pr => pr.personId === p.id && pr.committeeMonth === selected);
+      
+      if (isUp) {
+        return {
+          ...p,
+          promoted: p.promoted, 
+          step: p.step
+        };
+      } else {
+        return {
+          ...p,
+          promoted: !!promo,
+          step: promo ? (promo.toStep as Step) : p.step,
+          promotionNotes: promo ? promo.notes : ''
+        };
+      }
+    });
+  });
+
   readonly filteredPeople = computed(() => {
-    let list = this.people();
+    let list = this.peopleForSelectedCommittee();
     const query = this.searchQuery().trim().toLowerCase();
     const cargo = this.filterCargo();
     const step = this.filterStep();
@@ -133,13 +190,30 @@ export class Dashboard {
   });
 
   readonly stats = computed(() => {
-    const list = this.people();
+    const list = this.peopleForSelectedCommittee();
+    const isUp = this.isUpcomingSelected();
     return {
       total: list.length,
-      expecting: list.filter((p) => p.expectsPromotion).length,
+      expecting: isUp ? list.filter((p) => p.expectsPromotion).length : 0,
       promoted: list.filter((p) => p.promoted).length,
     };
   });
+
+  selectPreviousCommittee() {
+    const list = this.committeesList();
+    const currentIdx = list.indexOf(this.selectedCommitteeLabel());
+    if (currentIdx > 0) {
+      this.selectedCommitteeLabel.set(list[currentIdx - 1]);
+    }
+  }
+
+  selectNextCommittee() {
+    const list = this.committeesList();
+    const currentIdx = list.indexOf(this.selectedCommitteeLabel());
+    if (currentIdx !== -1 && currentIdx < list.length - 1) {
+      this.selectedCommitteeLabel.set(list[currentIdx + 1]);
+    }
+  }
 
   async addPerson(): Promise<void> {
     const name = this.newName().trim();
@@ -153,7 +227,6 @@ export class Dashboard {
   }
 
   async onPromotedChange(id: string, event: { promoted: boolean; notes: string }, currentStep: Step): Promise<void> {
-
     const person = this.people().find(p => p.id === id);
     if (!person) return;
     await this.dataService.markPromoted(id, event.promoted, currentStep, person.cargo, this.committeeMonthLabel, event.notes);

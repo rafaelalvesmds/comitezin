@@ -296,6 +296,24 @@ app.post('/api/promotions', async (req, res) => {
   }
 });
 
+// DELETE promotion record
+app.delete('/api/promotions', async (req, res) => {
+  const { personId, committeeMonth } = req.query;
+  if (!personId || !committeeMonth) {
+    return res.status(400).json({ error: 'personId e committeeMonth são obrigatórios' });
+  }
+  try {
+    await pool.query(
+      'DELETE FROM promotion_history WHERE person_id = $1 AND committee_month = $2',
+      [personId, committeeMonth]
+    );
+    res.status(204).end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao remover promoção' });
+  }
+});
+
 // GET promotion history for a person
 app.get('/api/promotions/:personId', async (req, res) => {
   const { personId } = req.params;
