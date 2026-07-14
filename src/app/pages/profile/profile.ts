@@ -63,6 +63,16 @@ export class Profile implements OnInit {
     });
   });
 
+  personExpectsUpcoming = computed(() => {
+    const p = this.person();
+    if (!p) return false;
+    const committeeLabel = `${this.committee.monthName} ${this.committee.year}`;
+    const clean = (m: string) => m.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+    const target = clean(committeeLabel);
+    const months = p.expectsPromotionMonths || [];
+    return months.map(clean).includes(target);
+  });
+
 
   // Competency form values
   formTecnico = signal(1);
