@@ -160,6 +160,22 @@ async function initDb() {
       WHERE expects_promotion = true 
         AND (expects_promotion_months IS NULL OR array_length(expects_promotion_months, 1) IS NULL)
     `);
+
+    // 10. Specific correction for Locutor: revert Pleno II to Pleno I, and update history to Junior II -> Pleno I
+    await pool.query(`
+      UPDATE promotion_history 
+      SET from_step = 'Junior II', to_step = 'Pleno I' 
+      WHERE person_id = (SELECT id FROM people WHERE name = 'Locutor') 
+        AND committee_month = 'Maio 2026' 
+        AND from_step = 'Pleno I' 
+        AND to_step = 'Pleno II'
+    `);
+    
+    await pool.query(`
+      UPDATE people 
+      SET step = 'Pleno I' 
+      WHERE name = 'Locutor' AND step = 'Pleno II'
+    `);
   } catch (err) {
     console.error('Database migration/init error:', err.message);
   }
