@@ -17,21 +17,9 @@ export class PersonCard {
   hideCargo = input(false);
   badgeMetadata = BADGE_METADATA;
 
-
-
-  promotedChanged = output<{ promoted: boolean; notes: string }>();
-
   removeRequested = output<void>();
 
-  showNotesInput = signal(false);
-  promotionNotes = signal('');
-
-  // Estado otimista para atualizar a UI imediatamente após confirmar promoção
-  private optimisticPromoted = signal<boolean | null>(null);
-
   protected isPromoted = computed(() => {
-    const optimistic = this.optimisticPromoted();
-    if (optimistic !== null) return optimistic;
     return this.person().promoted;
   });
 
@@ -47,29 +35,5 @@ export class PersonCard {
   openProfile(manageBadges = false) {
     const extras = manageBadges ? { queryParams: { editBadges: 'true' } } : {};
     this.router.navigate(['/profile', this.person().id], extras);
-  }
-
-
-  onPromoteToggle() {
-    if (!this.isPromoted()) {
-      // About to promote — show notes input
-      this.showNotesInput.set(true);
-    } else {
-      // Un-promote
-      this.optimisticPromoted.set(false);
-      this.promotedChanged.emit({ promoted: false, notes: '' });
-    }
-  }
-
-  confirmPromotion() {
-    this.optimisticPromoted.set(true);
-    this.promotedChanged.emit({ promoted: true, notes: this.promotionNotes() });
-    this.showNotesInput.set(false);
-    this.promotionNotes.set('');
-  }
-
-  cancelPromotion() {
-    this.showNotesInput.set(false);
-    this.promotionNotes.set('');
   }
 }
