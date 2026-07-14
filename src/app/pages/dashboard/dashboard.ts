@@ -245,11 +245,7 @@ export class Dashboard {
     this.showAddForm.set(false);
   }
 
-  async onPromotedChange(id: string, event: { promoted: boolean; notes: string }, currentStep: Step): Promise<void> {
-    const person = this.people().find(p => p.id === id);
-    if (!person) return;
-    await this.dataService.markPromoted(id, event.promoted, currentStep, person.cargo, this.committeeMonthLabel, event.notes);
-  }
+
 
   async onRemove(id: string): Promise<void> {
     this.personToRemove.set(id);

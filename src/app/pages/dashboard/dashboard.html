@@ -362,7 +362,6 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           @for (person of group.people; track person.id) {
           <app-person-card [person]="person" [isCommitteeMonth]="isUpcomingSelected()" [hideCargo]="true"
-            (promotedChanged)="onPromotedChange(person.id, $event, person.step)"
             (removeRequested)="onRemove(person.id)" />
 
 

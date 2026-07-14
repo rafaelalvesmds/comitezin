@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
@@ -39,6 +39,29 @@ export class Profile implements OnInit {
   editingBadges = signal(false);
   selectedBadges = signal<string[]>([]);
   isAdmin = this.authService.isAuthenticated;
+
+  // Promote modal state
+  showPromoteModal = signal(false);
+  promoteCommittee = signal('');
+  promoteNotes = signal('');
+  isPromoting = signal(false);
+
+  selectableCommittees = computed(() => {
+    const currentYear = new Date().getFullYear();
+    const all = [
+      `Fevereiro ${currentYear}`,
+      `Maio ${currentYear}`,
+      `Setembro ${currentYear}`
+    ];
+    const historyMonths = this.promotionHistory().map(h => {
+      const clean = (m: string) => m.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+      return clean(h.committeeMonth);
+    });
+    return all.filter(c => {
+      const clean = (m: string) => m.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+      return !historyMonths.includes(clean(c));
+    });
+  });
 
 
   // Competency form values
@@ -221,6 +244,79 @@ export class Profile implements OnInit {
     }
     
     this.person.set({ ...p, expectsPromotion: expectation, expectsPromotionMonths: months });
+  }
+
+  openPromoteModal() {
+    const available = this.selectableCommittees();
+    if (available.length === 0) {
+      alert('Este colaborador já foi promovido em todos os comitês disponíveis deste ano!');
+      return;
+    }
+    this.promoteCommittee.set(available[0]);
+    this.promoteNotes.set('');
+    this.showPromoteModal.set(true);
+  }
+
+  async confirmPromotion() {
+    const p = this.person();
+    if (!p) return;
+    
+    this.isPromoting.set(true);
+    try {
+      await this.dataService.markPromoted(
+        p.id,
+        true,
+        p.step,
+        p.cargo,
+        this.promoteCommittee(),
+        this.promoteNotes()
+      );
+      
+      // Reload profile data (specifically person and history)
+      await this.dataService.loadPeople();
+      const updatedPerson = this.dataService.people().find(x => x.id === p.id);
+      if (updatedPerson) {
+        this.person.set(updatedPerson);
+      }
+      const history = await this.dataService.getPromotionHistory(p.id);
+      this.promotionHistory.set(history);
+      
+      this.showPromoteModal.set(false);
+    } catch (err) {
+      console.error('Erro ao promover colaborador', err);
+    } finally {
+      this.isPromoting.set(false);
+    }
+  }
+
+  async deletePromotion(record: PromotionRecord) {
+    if (!confirm(`Deseja realmente reverter a promoção do comitê de ${record.committeeMonth}?`)) {
+      return;
+    }
+    
+    const p = this.person();
+    if (!p) return;
+    
+    try {
+      await this.dataService.markPromoted(
+        p.id,
+        false,
+        p.step,
+        p.cargo,
+        record.committeeMonth
+      );
+      
+      // Reload profile data
+      await this.dataService.loadPeople();
+      const updatedPerson = this.dataService.people().find(x => x.id === p.id);
+      if (updatedPerson) {
+        this.person.set(updatedPerson);
+      }
+      const history = await this.dataService.getPromotionHistory(p.id);
+      this.promotionHistory.set(history);
+    } catch (err) {
+      console.error('Erro ao reverter promoção', err);
+    }
   }
 
 

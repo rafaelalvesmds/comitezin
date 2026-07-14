@@ -76,69 +76,22 @@
 
 
 
-  <!-- Toggles -->
+  <!-- Promotion Info (Only when promoted in selected committee) -->
   <div class="space-y-3">
-    <!-- Promovido -->
-    @if (isCommitteeMonth()) {
-      @if (!showNotesInput()) {
-        @if (canBePromoted() || isPromoted()) {
-          <label
-            class="flex items-center gap-3 cursor-pointer select-none rounded-xl px-3 py-2.5 -mx-3 hover:bg-emerald-500/5 transition-colors">
-            <div class="relative">
-              <input type="checkbox" [checked]="isPromoted()" (change)="onPromoteToggle()" class="sr-only peer" />
-              <div class="w-9 h-5 bg-slate-700 rounded-full peer-checked:bg-emerald-500 transition-colors duration-200"></div>
-              <div
-                class="absolute top-0.5 left-0.5 w-4 h-4 bg-slate-300 rounded-full shadow-sm peer-checked:translate-x-4 peer-checked:bg-white transition-all duration-200">
-              </div>
-            </div>
-            <span class="text-sm text-slate-400">Foi promovido(a)!</span>
-            @if (isPromoted()) {
-              <span class="text-xs text-emerald-400 font-medium ml-auto">Promoção aplicada</span>
-            }
-          </label>
-        } @else {
-          <div class="px-3 py-2.5 -mx-3 text-xs text-slate-500 italic">
-            Nível máximo atingido para este cargo
-          </div>
+    @if (isPromoted()) {
+      <div class="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-3 -mx-3">
+        <div class="flex items-center gap-2 text-emerald-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+          </svg>
+          <span class="text-xs font-bold uppercase tracking-wider">Promovido(a) neste comitê</span>
+        </div>
+        @if (person().promotionNotes) {
+          <p class="text-xs text-slate-400 italic mt-2 border-t border-white/5 pt-2 leading-relaxed">
+            "{{ person().promotionNotes }}"
+          </p>
         }
-      }
-
-      <!-- Promotion Notes Dialog -->
-      @if (showNotesInput()) {
-        <div class="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-4 -mx-3">
-          <p class="text-sm text-emerald-400 font-medium mb-2">Justificativa da promoção</p>
-          <textarea [ngModel]="promotionNotes()" (ngModelChange)="promotionNotes.set($event)" name="notes" rows="2"
-            placeholder="Ex: Entregou projeto X com excelência..."
-            class="w-full px-3 py-2 text-sm rounded-lg border border-white/10 bg-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"></textarea>
-          <div class="flex gap-2 mt-2">
-            <button (click)="confirmPromotion()"
-              class="px-3 py-1.5 text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors cursor-pointer">
-              Confirmar Promoção
-            </button>
-            <button (click)="cancelPromotion()"
-              class="px-3 py-1.5 text-xs text-slate-400 hover:bg-white/5 rounded-lg transition-colors cursor-pointer">
-              Cancelar
-            </button>
-          </div>
-        </div>
-      }
-    } @else {
-      <!-- Modo Somente Leitura (Comitês Passados) -->
-      @if (isPromoted()) {
-        <div class="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-3 -mx-3">
-          <div class="flex items-center gap-2 text-emerald-400">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-            </svg>
-            <span class="text-xs font-bold uppercase tracking-wider">Promovido(a) neste comitê</span>
-          </div>
-          @if (person().promotionNotes) {
-            <p class="text-xs text-slate-400 italic mt-2 border-t border-white/5 pt-2 leading-relaxed">
-              "{{ person().promotionNotes }}"
-            </p>
-          }
-        </div>
-      }
+      </div>
     }
   </div>
 </div>
