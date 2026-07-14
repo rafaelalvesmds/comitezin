@@ -87,8 +87,8 @@
               <!-- Expectation toggle -->
               <label class="flex items-center gap-3 cursor-pointer select-none group/toggle">
                 <div class="relative">
-                  <input type="checkbox" [checked]="p.expectsPromotion"
-                    (change)="onExpectationChange(!p.expectsPromotion)" class="sr-only peer" />
+                  <input type="checkbox" [checked]="personExpectsUpcoming()"
+                    (change)="onExpectationChange(!personExpectsUpcoming())" class="sr-only peer" />
                   <div class="w-8 h-4 bg-slate-700 rounded-full peer-checked:bg-indigo-500 transition-colors duration-200"></div>
                   <div
                     class="absolute top-0.5 left-0.5 w-3 h-3 bg-slate-300 rounded-full shadow-sm peer-checked:translate-x-4 peer-checked:bg-white transition-all duration-200">
