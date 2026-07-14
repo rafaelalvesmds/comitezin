@@ -149,6 +149,17 @@ async function initDb() {
         );
       }
     }
+    
+    // 8. Add expects_promotion_months column
+    await pool.query('ALTER TABLE people ADD COLUMN IF NOT EXISTS expects_promotion_months TEXT[] DEFAULT \'{}\'');
+    
+    // 9. Backfill expects_promotion_months for people who expect promotion
+    await pool.query(`
+      UPDATE people 
+      SET expects_promotion_months = ARRAY['Maio 2026'] 
+      WHERE expects_promotion = true 
+        AND (expects_promotion_months IS NULL OR array_length(expects_promotion_months, 1) IS NULL)
+    `);
   } catch (err) {
     console.error('Database migration/init error:', err.message);
   }
@@ -190,7 +201,7 @@ app.get('/api/auth/verify', (req, res) => {
 app.get('/api/people', async (_req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT p.id, p.name, p.cargo, p.step, p.expects_promotion AS "expectsPromotion", p.promoted, p.squad, p.badges, p.created_at AS "createdAt",
+      `SELECT p.id, p.name, p.cargo, p.step, p.expects_promotion AS "expectsPromotion", p.expects_promotion_months AS "expectsPromotionMonths", p.promoted, p.squad, p.badges, p.created_at AS "createdAt",
               (SELECT COUNT(*)::int FROM feedback f WHERE f.person_id = p.id) AS "feedbackCount"
 
        FROM people p
@@ -212,7 +223,7 @@ app.post('/api/people', async (req, res) => {
   const deviceId = req.header('X-Device-Id');
   try {
     const { rows } = await pool.query(
-      'INSERT INTO people (name, cargo, step, squad, badges) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, badges, created_at AS "createdAt"',
+      'INSERT INTO people (name, cargo, step, squad, badges) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", expects_promotion_months AS "expectsPromotionMonths", promoted, squad, badges, created_at AS "createdAt"',
       [name, cargo, step, squad || '', []]
     );
 
@@ -231,6 +242,7 @@ app.patch('/api/people/:id', async (req, res) => {
   // Map camelCase to snake_case
   const columnMap = {
     expectsPromotion: 'expects_promotion',
+    expectsPromotionMonths: 'expects_promotion_months',
     promoted: 'promoted',
     cargo: 'cargo',
     step: 'step',
@@ -261,7 +273,7 @@ app.patch('/api/people/:id', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `UPDATE people SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", promoted, squad, badges, created_at AS "createdAt"`,
+      `UPDATE people SET ${setClauses.join(', ')} WHERE id = $${i} RETURNING id, name, cargo, step, expects_promotion AS "expectsPromotion", expects_promotion_months AS "expectsPromotionMonths", promoted, squad, badges, created_at AS "createdAt"`,
       values
     );
 

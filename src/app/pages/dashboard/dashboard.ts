@@ -142,10 +142,12 @@ export class Dashboard {
 
     return rawPeople.map(p => {
       const promo = allPromotions.find(pr => pr.personId === p.id && cleanLabel(pr.committeeMonth) === cleanedSelected);
+      const expectsInSelected = p.expectsPromotionMonths ? p.expectsPromotionMonths.map(cleanLabel).includes(cleanedSelected) : false;
       
       return {
         ...p,
         promoted: !!promo,
+        expectsPromotion: expectsInSelected,
         step: promo ? (promo.toStep as Step) : p.step,
         promotionNotes: promo ? promo.notes : ''
       };

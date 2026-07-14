@@ -206,8 +206,21 @@ export class Profile implements OnInit {
   async onExpectationChange(expectation: boolean) {
     const p = this.person();
     if (!p) return;
-    await this.dataService.updateExpectation(p.id, expectation);
-    this.person.set({ ...p, expectsPromotion: expectation });
+    const committeeLabel = `${this.committee.monthName} ${this.committee.year}`;
+    await this.dataService.updateExpectation(p.id, expectation, committeeLabel);
+    
+    let months = p.expectsPromotionMonths || [];
+    const clean = (m: string) => m.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+    const target = clean(committeeLabel);
+    if (expectation) {
+      if (!months.map(clean).includes(target)) {
+        months = [...months, committeeLabel];
+      }
+    } else {
+      months = months.filter(m => clean(m) !== target);
+    }
+    
+    this.person.set({ ...p, expectsPromotion: expectation, expectsPromotionMonths: months });
   }
 
 
