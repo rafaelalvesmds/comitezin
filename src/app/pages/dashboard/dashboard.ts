@@ -66,10 +66,16 @@ export class Dashboard {
   selectedCommitteeLabel = signal<string>('');
 
   readonly committeesList = computed(() => {
-    // 1. Pega comitês únicos a partir do histórico de promoções
-    const pastCommittees = Array.from(new Set(this.dataService.promotions().map(p => p.committeeMonth)));
-    // 2. Adiciona o próximo comitê futuro
-    const nextCommitteeLabel = this.committeeMonthLabel;
+    const cleanLabel = (label: string) => {
+      if (!label) return '';
+      return label.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+    };
+
+    const pastCommittees = this.dataService.promotions()
+      .map(p => cleanLabel(p.committeeMonth))
+      .filter(p => !!p);
+
+    const nextCommitteeLabel = cleanLabel(this.committeeMonthLabel);
     const all = Array.from(new Set([...pastCommittees, nextCommitteeLabel]));
     
     const monthIndexes: Record<string, number> = {
@@ -87,7 +93,11 @@ export class Dashboard {
   });
 
   readonly isUpcomingSelected = computed(() => {
-    return this.selectedCommitteeLabel() === this.committeeMonthLabel;
+    const cleanLabel = (label: string) => {
+      if (!label) return '';
+      return label.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+    };
+    return cleanLabel(this.selectedCommitteeLabel()) === cleanLabel(this.committeeMonthLabel);
   });
 
   constructor() {
@@ -113,25 +123,23 @@ export class Dashboard {
     const rawPeople = this.people();
     const allPromotions = this.dataService.promotions();
     const selected = this.selectedCommitteeLabel();
-    const isUp = this.isUpcomingSelected();
     
+    const cleanLabel = (label: string) => {
+      if (!label) return '';
+      return label.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+    };
+    
+    const cleanedSelected = cleanLabel(selected);
+
     return rawPeople.map(p => {
-      const promo = allPromotions.find(pr => pr.personId === p.id && pr.committeeMonth === selected);
+      const promo = allPromotions.find(pr => pr.personId === p.id && cleanLabel(pr.committeeMonth) === cleanedSelected);
       
-      if (isUp) {
-        return {
-          ...p,
-          promoted: p.promoted, 
-          step: p.step
-        };
-      } else {
-        return {
-          ...p,
-          promoted: !!promo,
-          step: promo ? (promo.toStep as Step) : p.step,
-          promotionNotes: promo ? promo.notes : ''
-        };
-      }
+      return {
+        ...p,
+        promoted: !!promo,
+        step: promo ? (promo.toStep as Step) : p.step,
+        promotionNotes: promo ? promo.notes : ''
+      };
     });
   });
 
