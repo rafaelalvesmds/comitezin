@@ -46,6 +46,27 @@ export class Profile implements OnInit {
   promoteNotes = signal('');
   isPromoting = signal(false);
 
+  isCommitteeFuture(label: string): boolean {
+    const clean = (m: string) => m.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
+    const cleaned = clean(label);
+    const [monthName, yearStr] = cleaned.split(' ');
+    const year = parseInt(yearStr, 10);
+    
+    const monthIndexes: Record<string, number> = {
+      'Janeiro': 1, 'Fevereiro': 2, 'Março': 3, 'Abril': 4, 'Maio': 5, 'Junho': 6,
+      'Julho': 7, 'Agosto': 8, 'Setembro': 9, 'Outubro': 10, 'Novembro': 11, 'Dezembro': 12
+    };
+    const month = monthIndexes[monthName] || 1;
+    
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-12
+    
+    if (year > currentYear) return true;
+    if (year === currentYear && month > currentMonth) return true;
+    return false;
+  }
+
   selectableCommittees = computed(() => {
     const currentYear = new Date().getFullYear();
     const all = [
@@ -53,11 +74,16 @@ export class Profile implements OnInit {
       `Maio ${currentYear}`,
       `Setembro ${currentYear}`
     ];
+    
+    // Filter out future committees
+    const nonFuture = all.filter(c => !this.isCommitteeFuture(c));
+
     const historyMonths = this.promotionHistory().map(h => {
       const clean = (m: string) => m.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
       return clean(h.committeeMonth);
     });
-    return all.filter(c => {
+    
+    return nonFuture.filter(c => {
       const clean = (m: string) => m.replace(/\bde\b/gi, '').replace(/\s+/g, ' ').trim();
       return !historyMonths.includes(clean(c));
     });
