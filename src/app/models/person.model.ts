@@ -155,6 +155,12 @@ export const STEP_COLORS: Record<string, string> = {
       label: 'Papagaense',
       image: 'badges/papagaense.png',
       description: 'Orgulho da terra mineira'
+    },
+    'sem_maldade': {
+      id: 'sem_maldade',
+      label: 'Sem Maldade',
+      image: 'badges/sem_maldade.png',
+      description: 'Aquele que vê tudo sem maldade'
     }
   };
 
